@@ -20,4 +20,12 @@ class SubmissionService {
         submissionRepository.save(submission)
         return submission.id
     }
+
+    fun acceptSubmission(id: Long) {
+        submissionRepository.findSubmissionById(id)?.changeStatus("ok") ?: TODO()
+    }
+
+    fun denySubmission(id: Long) {
+        submissionRepository.findSubmissionById(id)?.changeStatus("failed") ?: TODO()
+    }
 }
