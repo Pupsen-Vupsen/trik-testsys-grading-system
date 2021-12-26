@@ -15,20 +15,20 @@ class SubmissionService {
     @Autowired
     lateinit var submissionRepository: SubmissionRepository
 
-    fun getSubmissionOrNull(id: Int) = submissionRepository.findSubmissionById(id)
+    fun getSubmissionOrNull(id: Long) = submissionRepository.findSubmissionById(id)
 
     fun getAllSubmissions() = submissionRepository.findAll().toList()
 
     fun getSameRunningSubmissionOrNull(filePath: String) =
         submissionRepository.findSubmissionByFilePathAndStatus(filePath, "running")
 
-    fun saveSubmission(submission: Submission): Int {
+    fun saveSubmission(submission: Submission): Long {
         submissionRepository.save(submission)
         return submission.id
     }
 
     @Async
-    fun changeSubmissionStatus(id: Int) {
+    fun changeSubmissionStatus(id: Long) {
         val submission = submissionRepository.findSubmissionById(id)!!
         submission.changeStatus()
         submissionRepository.save(submission)

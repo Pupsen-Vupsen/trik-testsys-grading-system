@@ -29,7 +29,7 @@ class SubmissionController {
     }
 
     @GetMapping("grading-system/submissions/submission")
-    fun getSubmission(@RequestParam id: Int): ResponseEntity<String> {
+    fun getSubmission(@RequestParam id: Long): ResponseEntity<String> {
         val submission = submissionService.getSubmissionOrNull(id)
             ?: return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
