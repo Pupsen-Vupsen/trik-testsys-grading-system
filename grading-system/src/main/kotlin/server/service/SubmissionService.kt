@@ -4,31 +4,33 @@ import server.entity.Submission
 import server.repository.SubmissionRepository
 
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.scheduling.annotation.Async
+import org.springframework.scheduling.annotation.EnableAsync
 import org.springframework.stereotype.Service
 
 @Service
+@EnableAsync
 class SubmissionService {
 
     @Autowired
     lateinit var submissionRepository: SubmissionRepository
 
-    fun getSubmission(id: Long) = submissionRepository.findSubmissionById(id)
+    fun getSubmissionOrNull(id: Int) = submissionRepository.findSubmissionById(id)
 
     fun getAllSubmissions() = submissionRepository.findAll().toList()
 
-    fun getSameRunningSubmission(filePath: String) =
+    fun getSameRunningSubmissionOrNull(filePath: String) =
         submissionRepository.findSubmissionByFilePathAndStatus(filePath, "running")
 
-    fun saveSubmission(submission: Submission): Long? {
+    fun saveSubmission(submission: Submission): Int {
         submissionRepository.save(submission)
         return submission.id
     }
 
-    fun acceptSubmission(id: Long) {
-        submissionRepository.findSubmissionById(id)?.changeStatus("ok") ?: TODO()
-    }
-
-    fun denySubmission(id: Long) {
-        submissionRepository.findSubmissionById(id)?.changeStatus("failed") ?: TODO()
+    @Async
+    fun changeSubmissionStatus(id: Int) {
+        val submission = submissionRepository.findSubmissionById(id)!!
+        submission.changeStatus()
+        submissionRepository.save(submission)
     }
 }
