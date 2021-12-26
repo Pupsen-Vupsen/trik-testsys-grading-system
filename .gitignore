@@ -14,4 +14,5 @@ build/
 out/
 !**/src/main/**/out/
 !**/src/test/**/out/
+*.log
 
