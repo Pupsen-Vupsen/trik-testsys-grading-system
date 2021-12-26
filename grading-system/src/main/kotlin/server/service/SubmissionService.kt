@@ -14,7 +14,10 @@ class SubmissionService {
 
     fun getSubmission(id: Long) = submissionRepository.findSubmissionById(id)
 
-    fun getAllSubmissions(): Iterable<Submission> = submissionRepository.findAll()
+    fun getAllSubmissions() = submissionRepository.findAll().toList()
+
+    fun getSameRunningSubmission(filePath: String) =
+        submissionRepository.findSubmissionByFilePathAndStatus(filePath, "running")
 
     fun saveSubmission(submission: Submission): Long? {
         submissionRepository.save(submission)
