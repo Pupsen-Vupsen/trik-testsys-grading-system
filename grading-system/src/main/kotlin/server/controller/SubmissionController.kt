@@ -20,7 +20,7 @@ class SubmissionController {
 
         if (submissions.isEmpty())
             return ResponseEntity
-                .status(HttpStatus.NO_CONTENT)
+                .status(HttpStatus.NOT_FOUND)
                 .body("There is no submissions.")
 
         return ResponseEntity
@@ -29,10 +29,10 @@ class SubmissionController {
     }
 
     @GetMapping("grading-system/submissions/submission")
-    fun getSubmission(@RequestParam id: Long): ResponseEntity<String> {
-        val submission = submissionService.getSubmission(id)
+    fun getSubmission(@RequestParam id: Int): ResponseEntity<String> {
+        val submission = submissionService.getSubmissionOrNull(id)
             ?: return ResponseEntity
-                .status(HttpStatus.NO_CONTENT)
+                .status(HttpStatus.NOT_FOUND)
                 .body("Submission with id $id does not exist.")
 
         return ResponseEntity
@@ -42,13 +42,14 @@ class SubmissionController {
 
     @PostMapping("grading-system/submissions/submission")
     fun postSubmission(@RequestParam filePath: String): ResponseEntity<Any> {
-        submissionService.getSameRunningSubmission(filePath)?.let {
+        submissionService.getSameRunningSubmissionOrNull(filePath)?.let {
             return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body("You have already running submission on this task.")
         }
 
         val submissionId = submissionService.saveSubmission(Submission(filePath))
+        submissionService.changeSubmissionStatus(submissionId)
         return ResponseEntity
             .status(HttpStatus.OK)
             .body(submissionId)
