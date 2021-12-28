@@ -15,11 +15,9 @@ class SubmissionController {
     private lateinit var submissionService: SubmissionService
 
     @GetMapping("grading-system/submissions")
-    fun getAllSubmission(): ResponseEntity<Any> {
-        val submissions = submissionService.getAllSubmissions()
-
-        if (submissions.isEmpty())
-            return ResponseEntity
+    fun getAllSubmissions(): ResponseEntity<Any> {
+        val submissions = submissionService.getAllSubmissionsOrNull()
+            ?: return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body("There is no submissions.")
 
@@ -29,7 +27,7 @@ class SubmissionController {
     }
 
     @GetMapping("grading-system/submissions/submission")
-    fun getSubmission(@RequestParam id: Long): ResponseEntity<String> {
+    fun getSubmissionStatus(@RequestParam id: Long): ResponseEntity<String> {
         val submission = submissionService.getSubmissionOrNull(id)
             ?: return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
@@ -37,11 +35,11 @@ class SubmissionController {
 
         return ResponseEntity
             .status(HttpStatus.OK)
-            .body(submission.status)
+            .body(submission.status.name)
     }
 
     @PostMapping("grading-system/submissions/submission")
-    fun postSubmission(@RequestParam filePath: String): ResponseEntity<Any> {
+    fun postSubmission(@RequestParam("file_path") filePath: String): ResponseEntity<Any> {
         submissionService.getSameRunningSubmissionOrNull(filePath)?.let {
             return ResponseEntity
                 .status(HttpStatus.CONFLICT)

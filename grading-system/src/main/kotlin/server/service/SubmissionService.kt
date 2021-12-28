@@ -2,6 +2,7 @@ package server.service
 
 import server.entity.Submission
 import server.repository.SubmissionRepository
+import server.enum.Status
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Async
@@ -17,10 +18,14 @@ class SubmissionService {
 
     fun getSubmissionOrNull(id: Long) = submissionRepository.findSubmissionById(id)
 
-    fun getAllSubmissions() = submissionRepository.findAll().toList()
+    fun getAllSubmissionsOrNull(): List<Submission>? {
+        val submissions = submissionRepository.findAll().toList()
+        if (submissions.isEmpty()) return null
+        return submissions
+    }
 
     fun getSameRunningSubmissionOrNull(filePath: String) =
-        submissionRepository.findSubmissionByFilePathAndStatus(filePath, "running")
+        submissionRepository.findSubmissionByFilePathAndStatus(filePath, Status.RUNNING)
 
     fun saveSubmission(submission: Submission): Long {
         submissionRepository.save(submission)
