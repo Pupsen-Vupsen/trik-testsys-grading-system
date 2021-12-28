@@ -1,12 +1,13 @@
 package server.controller
 
-import server.entity.Submission
 import server.service.SubmissionService
+import server.service.FileUploader
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
 
 @RestController
 class SubmissionController {
@@ -38,7 +39,7 @@ class SubmissionController {
             .body(submission.status.name)
     }
 
-    @PostMapping("grading-system/submissions/submission")
+    /*@PostMapping("grading-system/submissions/submission")
     fun postSubmission(@RequestParam("file_path") filePath: String): ResponseEntity<Any> {
         submissionService.getSameRunningSubmissionOrNull(filePath)?.let {
             return ResponseEntity
@@ -51,5 +52,29 @@ class SubmissionController {
         return ResponseEntity
             .status(HttpStatus.OK)
             .body(submissionId)
+    }*/
+
+    @PostMapping("grading-system/submissions/submission")
+    fun postSubmission(
+        @RequestParam("task_name") taskName: String,
+        @RequestParam("file_name") fileName: String,
+        @RequestParam file: MultipartFile
+    ): ResponseEntity<String> {
+        val fileUploader = FileUploader(file, fileName)
+
+        return try {
+            if (fileUploader.upload(""))
+                ResponseEntity
+                    .status(HttpStatus.OK)
+                    .body("You have successfully uploaded file $fileName to task $taskName.")
+            else
+                ResponseEntity
+                    .status(HttpStatus.UNPROCESSABLE_ENTITY)
+                    .body("Uploading file $fileName if empty.")
+        } catch (e: Exception) {
+            ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(e.message)
+        }
     }
 }
