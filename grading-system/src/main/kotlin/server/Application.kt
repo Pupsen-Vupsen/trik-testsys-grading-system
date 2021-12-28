@@ -13,6 +13,7 @@ import javax.servlet.MultipartConfigElement
 @SpringBootApplication
 @Configuration
 class Application {
+
     @Bean
     fun multipartConfigElement(): MultipartConfigElement {
         val factory = MultipartConfigFactory()
