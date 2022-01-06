@@ -2,12 +2,16 @@ package server.controller
 
 import server.service.SubmissionService
 import server.service.FileUploader
+import server.entity.Submission
 
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.core.io.InputStreamResource
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
+import java.io.File
+import java.io.FileInputStream
 
 @RestController
 class SubmissionController {
@@ -27,7 +31,7 @@ class SubmissionController {
             .body(submissions)
     }
 
-    @GetMapping("grading-system/submissions/submission")
+    @GetMapping("grading-system/submissions/submission/status")
     fun getSubmissionStatus(@RequestParam id: Long): ResponseEntity<String> {
         val submission = submissionService.getSubmissionOrNull(id)
             ?: return ResponseEntity
@@ -39,38 +43,40 @@ class SubmissionController {
             .body(submission.status.name)
     }
 
-    /*@PostMapping("grading-system/submissions/submission")
-    fun postSubmission(@RequestParam("file_path") filePath: String): ResponseEntity<Any> {
-        submissionService.getSameRunningSubmissionOrNull(filePath)?.let {
-            return ResponseEntity
-                .status(HttpStatus.CONFLICT)
-                .body("You have already running submission on this task.")
-        }
+    @GetMapping("grading-system/submissions/submission/download")
+    fun getSubmissionFile(@RequestParam id: Long): ResponseEntity<Any> {
+        val submission = submissionService.getSubmissionOrNull(id)
+            ?: return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body("Submission with id $id does not exist.")
 
-        val submissionId = submissionService.saveSubmission(Submission(filePath))
-        submissionService.changeSubmissionStatus(submissionId)
-        return ResponseEntity
-            .status(HttpStatus.OK)
-            .body(submissionId)
-    }*/
+        val stream = InputStreamResource(FileInputStream(File(submission.filePath)))
 
-    @PostMapping("grading-system/submissions/submission")
+        return ResponseEntity.status(HttpStatus.OK).body(stream)
+    }
+
+    @PostMapping("grading-system/submissions/submission/upload")
     fun postSubmission(
-        @RequestParam("task_name") taskName: String,
-        @RequestParam("file_name") fileName: String,
+        @RequestParam("task_number") taskNumber: String,
         @RequestParam file: MultipartFile
     ): ResponseEntity<String> {
-        val fileUploader = FileUploader(file, fileName)
+        val fileUploader = FileUploader(file, taskNumber)
 
         return try {
-            if (fileUploader.upload(""))
+            if (fileUploader.upload()) {
+                val submissionId =
+                    submissionService.saveSubmission(Submission("./tasks/task" + taskNumber + "/" + file.originalFilename))
+
                 ResponseEntity
                     .status(HttpStatus.OK)
-                    .body("You have successfully uploaded file $fileName to task $taskName.")
-            else
+                    .body(
+                        "You have successfully uploaded file ${file.originalFilename} to task number $taskNumber.\n" +
+                                "Submission id: $submissionId."
+                    )
+            } else
                 ResponseEntity
                     .status(HttpStatus.UNPROCESSABLE_ENTITY)
-                    .body("Uploading file $fileName if empty.")
+                    .body("Uploading file ${file.originalFilename} if empty.")
         } catch (e: Exception) {
             ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
