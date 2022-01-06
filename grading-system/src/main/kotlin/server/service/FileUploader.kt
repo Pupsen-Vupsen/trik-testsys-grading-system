@@ -12,7 +12,7 @@ class FileUploader(private val file: MultipartFile, private val taskNumber: Stri
         if (file.isEmpty) return false
 
         val bytes = file.bytes
-        val uploadedFile = File("C:\\Projects\\Git\\trik-testsys\\tasks\\task" + taskNumber + "\\" + file.originalFilename)
+        val uploadedFile = File("./tasks/task" + taskNumber + "/" + file.originalFilename)
         val stream = BufferedOutputStream(FileOutputStream(uploadedFile))
 
         stream.write(bytes)
