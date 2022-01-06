@@ -2,7 +2,6 @@ package server.entity
 
 import server.enum.Status
 
-import java.util.concurrent.TimeUnit
 import javax.persistence.*
 
 @Entity
@@ -17,12 +16,14 @@ class Submission(val filePath: String = "") {
     var status = Status.RUNNING
         private set
 
-    fun changeStatus() {
-        val n = (0..1).random()
-        TimeUnit.SECONDS.sleep(60)
+    fun test() {
+        Runtime.getRuntime().exec("powershell.exe -File ./test_submission.ps1")
 
-        if (n == 0) accept()
-        else deny()
+        /*val n = (0..1).random()
+            TimeUnit.SECONDS.sleep(60)
+
+            if (n == 0) accept()
+            else deny()*/
     }
 
     private fun accept() {
