@@ -33,9 +33,9 @@ class SubmissionService {
     }
 
     @Async
-    fun changeSubmissionStatus(id: Long) {
+    fun testSubmission(id: Long) {
         val submission = submissionRepository.findSubmissionById(id)!!
-        submission.changeStatus()
+        submission.test()
         submissionRepository.save(submission)
     }
 }

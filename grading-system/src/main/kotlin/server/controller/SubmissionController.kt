@@ -67,6 +67,8 @@ class SubmissionController {
                 val submissionId =
                     submissionService.saveSubmission(Submission("./tasks/task" + taskNumber + "/" + file.originalFilename))
 
+                submissionService.testSubmission(submissionId)
+
                 ResponseEntity
                     .status(HttpStatus.OK)
                     .body(
