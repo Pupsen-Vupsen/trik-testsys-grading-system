@@ -15,4 +15,5 @@ out/
 !**/src/main/**/out/
 !**/src/test/**/out/
 logs/
+tasks/
 
