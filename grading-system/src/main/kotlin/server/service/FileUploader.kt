@@ -6,13 +6,13 @@ import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
 
-class FileUploader(private val file: MultipartFile, private val taskNumber: String) {
+class FileUploader(private val file: MultipartFile, private val taskName: String) {
 
     fun upload(): Boolean {
         if (file.isEmpty) return false
 
         val bytes = file.bytes
-        val uploadedFile = File("./tasks/task" + taskNumber + "/" + file.originalFilename)
+        val uploadedFile = File("./tasks/" + taskName + "/" + file.originalFilename)
         val stream = BufferedOutputStream(FileOutputStream(uploadedFile))
 
         stream.write(bytes)
