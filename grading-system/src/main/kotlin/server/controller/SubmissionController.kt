@@ -40,7 +40,7 @@ class SubmissionController {
 
         return ResponseEntity
             .status(HttpStatus.OK)
-            .body(submission.status.code)
+            .body(submission.status)
     }
 
     @GetMapping("grading-system/submissions/submission/download")
@@ -55,17 +55,21 @@ class SubmissionController {
         return ResponseEntity.status(HttpStatus.OK).body(stream)
     }
 
+    private var fileId = 0
+
     @PostMapping("grading-system/submissions/submission/upload")
     fun postSubmission(
         @RequestParam("task_name") taskName: String,
         @RequestParam file: MultipartFile
     ): ResponseEntity<Any> {
-        val fileUploader = FileUploader(file, taskName)
+        fileId++
+        val filePath = "$taskName/$fileId.qrs"
+        val fileUploader = FileUploader(file, filePath)
 
         return try {
             if (fileUploader.upload()) {
                 val submissionId =
-                    submissionService.saveSubmission(Submission("./tasks/" + taskName + "/" + file.originalFilename))
+                    submissionService.saveSubmission(Submission("./tasks/$filePath"))
 
                 submissionService.testSubmission(submissionId)
 

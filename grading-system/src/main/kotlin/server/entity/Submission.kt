@@ -15,7 +15,7 @@ class Submission(val filePath: String = "") {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq")
     val id: Long = 0
 
-    var status = Status.RUNNING
+    var status = Status.RUNNING.code
         private set
 
     var message = ""
@@ -24,37 +24,29 @@ class Submission(val filePath: String = "") {
     fun test() {
         class TestingResults(val level: String, val message: String)
 
-        Runtime.getRuntime().exec("C:\\TRIKStudio\\2D-model.exe -b -r $filePath.log  $filePath")
+        Runtime.getRuntime().exec("C:\\TRIKStudio\\2D-model.exe -b -r $filePath.info  $filePath")
         Thread.sleep(10_000)
-        /* val logFile = File("$filePath.log").inputStream()
-        val strings = logFile.bufferedReader().use { it.readText() }
 
-        if(strings[26] == 'e') deny()
-        else accept()*/
-        val logFile = File("$filePath.log")
+        val logFile = File("$filePath.info")
+
         /*while(!logFile.exists()) {
             logFile = File("$filePath.log")
         }*/
 
         val log = Klaxon().parseArray<TestingResults>(logFile)!!
-        /*while(log == null) {
-            log = Klaxon().parse<TestingResults>(File("$filePath.log"))
-        }*/
 
         if(log[0].level == "error") deny()
         else accept()
 
         message = log[0].message
-
-        println(logFile.absolutePath)
-        //Runtime.getRuntime().exec("del ${logFile.absolutePath}")
+     //Runtime.getRuntime().exec("del ${logFile.absolutePath}")
     }
 
     private fun accept() {
-        status = Status.OK
+        status = Status.OK.code
     }
 
     private fun deny() {
-        status = Status.FAILED
+        status = Status.FAILED.code
     }
 }
