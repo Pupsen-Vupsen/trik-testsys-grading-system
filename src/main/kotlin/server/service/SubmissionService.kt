@@ -25,7 +25,7 @@ class SubmissionService {
     }
 
     fun getSameRunningSubmissionOrNull(filePath: String) =
-        submissionRepository.findSubmissionByFilePathAndStatus(filePath, Status.RUNNING)
+        submissionRepository.findSubmissionByFilePathAndStatus(filePath, Status.RUNNING.code)
 
     fun saveSubmission(submission: Submission): Long {
         submissionRepository.save(submission)
