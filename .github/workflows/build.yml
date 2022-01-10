@@ -1,0 +1,32 @@
+name: Build without test
+on:
+  push:
+  pull_request:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+          java-package: jdk
+          architecture: x64
+      - name: Cache Gradle packages
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/grading-system/.gradle/caches
+            ~/grading-system/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle
+      - name: Build
+        run: |
+          ./grading-system/gradlew :clean :assemble
+      - name: Cleanup Gradle Cache
+        # Remove some files from the Gradle cache, so they aren't cached by GitHub Actions.
+        # Restoring these files from a GitHub Actions cache might cause problems for future builds.
+        run: |
+          rm -f ~/grading-system/.gradle/caches/modules-2/modules-2.lock
+          rm -f ~/grading-system/.gradle/caches/modules-2/gc.properties
