@@ -25,21 +25,19 @@ class Submission(val filePath: String = "") {
         class TestingResults(val level: String, val message: String)
 
         Runtime.getRuntime().exec("C:\\TRIKStudio\\2D-model.exe -b -r $filePath.info  $filePath")
-        Thread.sleep(10_000)
 
         val logFile = File("$filePath.info")
 
-        /*while(!logFile.exists()) {
-            logFile = File("$filePath.log")
-        }*/
+        while (!logFile.exists()) {
+            Thread.sleep(10_000)
+        }
 
-        val log = Klaxon().parseArray<TestingResults>(logFile)!!
+        val log = Klaxon().parseArray<TestingResults>(logFile) ?: throw Exception("Log file doesn't exist")
 
-        if(log[0].level == "error") deny()
+        if (log[0].level == "error") deny()
         else accept()
 
         message = log[0].message
-     //Runtime.getRuntime().exec("del ${logFile.absolutePath}")
     }
 
     private fun accept() {
