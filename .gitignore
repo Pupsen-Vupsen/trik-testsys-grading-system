@@ -28,3 +28,6 @@ hs_err_pid*
 !gradle/wrapper/gradle-wrapper.properties
 .gradle
 src/main/resources/static
+
+data
+tasks
