@@ -63,13 +63,13 @@ class SubmissionController {
         @RequestParam file: MultipartFile
     ): ResponseEntity<Any> {
         fileId++
-        val filePath = "$taskName/$fileId.qrs"
-        val fileUploader = FileUploader(file, filePath)
+        val fileName = "$fileId.qrs"
+        val fileUploader = FileUploader(file, "$taskName/$fileName")
 
         return try {
             if (fileUploader.upload()) {
                 val submissionId =
-                    submissionService.saveSubmission(Submission("./tasks/$filePath"))
+                    submissionService.saveSubmission(Submission(taskName, fileName))
 
                 submissionService.testSubmission(submissionId)
 
