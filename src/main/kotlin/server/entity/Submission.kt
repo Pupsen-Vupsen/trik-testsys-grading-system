@@ -37,8 +37,8 @@ class Submission(
 
         countOfTests = File(testsPath).listFiles()!!.size
         File(testsPath).listFiles()!!.forEach {testFile ->
-            patchWithPole(testFile.absolutePath)
-            run2DModelTest()
+            executePatcher(testFile.absolutePath)
+            execute2DModel()
 
             val logFile = File("$filePath.info")
 
@@ -58,10 +58,10 @@ class Submission(
         message = "Successful tests $countOfSuccessfulTests/$countOfTests"
     }
 
-    private fun patchWithPole(poleFilePath: String) =
+    private fun executePatcher(poleFilePath: String) =
         Runtime.getRuntime().exec("C:\\TRIKStudio\\patcher.exe -f $poleFilePath $filePath")
 
-    private fun run2DModelTest() =
+    private fun execute2DModel() =
         Runtime.getRuntime().exec("C:\\TRIKStudio\\2D-model.exe -b -r $filePath.info  $filePath")
 
     private fun accept() {
