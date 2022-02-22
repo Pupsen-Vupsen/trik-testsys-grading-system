@@ -1,7 +1,10 @@
 package server.entity
 
 import com.beust.klaxon.Klaxon
+import server.enum.Constants
+import server.enum.Paths
 import server.enum.Status
+import server.enum.TRIK
 
 import java.io.File
 import javax.persistence.*
@@ -14,9 +17,9 @@ class Submission(
     private val fileName: String = ""
 ) {
 
-    private var taskPath = "./tasks/$taskName/"
-    var testsPath = taskPath + "tests"
-    var filePath = taskPath + fileName
+    private var taskPath = Paths.TASKS.text + taskName
+    private var testsPath = taskPath + Paths.TESTS.text
+    var filePath = "$taskPath/$fileName"
 
     var status = Status.RUNNING.code
         private set
@@ -39,7 +42,7 @@ class Submission(
             val logFile = File("$filePath.info")
 
             while (!logFile.exists()) {
-                Thread.sleep(10_000)
+                Thread.sleep(Constants.WAIT_TIME.value)
             }
 
             val log = Klaxon().parseArray<TestingResults>(logFile)
@@ -54,10 +57,10 @@ class Submission(
     }
 
     private fun executePatcher(poleFilePath: String) =
-        Runtime.getRuntime().exec("C:\\TRIKStudio\\patcher.exe -f $poleFilePath $filePath")
+        Runtime.getRuntime().exec("${TRIK.TWO_D_MODEL.text} $poleFilePath $filePath")
 
     private fun execute2DModel() =
-        Runtime.getRuntime().exec("C:\\TRIKStudio\\2D-model.exe -b -r $filePath.info  $filePath")
+        Runtime.getRuntime().exec("${TRIK.PATCHER.text} $filePath.info  $filePath")
 
     private fun accept() {
         status = Status.OK.code
