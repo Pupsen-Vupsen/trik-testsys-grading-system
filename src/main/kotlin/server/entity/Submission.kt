@@ -46,15 +46,14 @@ class Submission(
                 Thread.sleep(10_000)
             }
 
-            val log = Klaxon().parseArray<TestingResults>(logFile) ?: throw Exception("Log file doesn't exist")
+            val log = Klaxon().parseArray<TestingResults>(logFile)
 
-            if (log[0].level == "error") deny()
+            if (log == null || log[0].level == "error") deny()
             else countOfSuccessfulTests++
-
             logFile.delete()
         }
 
-        accept()
+        if(countOfSuccessfulTests == countOfTests) accept()
         message = "Successful tests $countOfSuccessfulTests/$countOfTests"
     }
 
