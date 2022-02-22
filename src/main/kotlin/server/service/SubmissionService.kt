@@ -24,6 +24,11 @@ class SubmissionService {
         return submissions
     }
 
+    fun getLastSubmissionIdOrNull(): Long? {
+        val submissions = getAllSubmissionsOrNull()
+        return submissions?.maxByOrNull { it.id }?.id
+    }
+
     fun getSameRunningSubmissionOrNull(filePath: String) =
         submissionRepository.findSubmissionByFilePathAndStatus(filePath, Status.RUNNING.code)
 
