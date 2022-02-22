@@ -9,14 +9,10 @@ import javax.persistence.*
 @Entity
 @Table(name = "SUBMISSIONS")
 class Submission(
+    @Id val id: Long = 0,
     private val taskName: String = "",
     private val fileName: String = ""
 ) {
-
-    @Id
-    @SequenceGenerator(name = "seq", initialValue = 1_000_000, allocationSize = 10_000)
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq")
-    val id: Long = 0
 
     private var taskPath = "./tasks/$taskName/"
     var testsPath = taskPath + "tests"
@@ -36,7 +32,7 @@ class Submission(
         class TestingResults(val level: String, val message: String)
 
         countOfTests = File(testsPath).listFiles()!!.size
-        File(testsPath).listFiles()!!.forEach {testFile ->
+        File(testsPath).listFiles()!!.forEach { testFile ->
             executePatcher(testFile.absolutePath)
             execute2DModel()
 
@@ -53,7 +49,7 @@ class Submission(
             logFile.delete()
         }
 
-        if(countOfSuccessfulTests == countOfTests) accept()
+        if (countOfSuccessfulTests == countOfTests) accept()
         message = "Successful tests $countOfSuccessfulTests/$countOfTests"
     }
 
