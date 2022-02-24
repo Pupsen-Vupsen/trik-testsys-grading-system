@@ -2,7 +2,7 @@ package server.service
 
 import server.entity.Submission
 import server.repository.SubmissionRepository
-import server.enum.Status
+import server.constants.Constants.Status
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Async
@@ -30,7 +30,7 @@ class SubmissionService {
     }
 
     fun getSameRunningSubmissionOrNull(filePath: String) =
-        submissionRepository.findSubmissionByFilePathAndStatus(filePath, Status.RUNNING.code)
+        submissionRepository.findSubmissionByFilePathAndStatus(filePath, Status.RUNNING)
 
     fun saveSubmission(submission: Submission): Long {
         submissionRepository.save(submission)
