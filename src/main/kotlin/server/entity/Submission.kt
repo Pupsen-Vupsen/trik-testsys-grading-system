@@ -1,11 +1,8 @@
 package server.entity
 
-import com.beust.klaxon.Klaxon
-import server.enum.Constants
-import server.enum.Paths
-import server.enum.Status
-import server.enum.TRIK
+import server.constants.Constants.*
 
+import com.beust.klaxon.Klaxon
 import java.io.File
 import javax.persistence.*
 
@@ -17,11 +14,11 @@ class Submission(
     private val fileName: String = ""
 ) {
 
-    private var taskPath = Paths.TASKS.text + taskName
-    private var testsPath = taskPath + Paths.TESTS.text
+    private var taskPath = Paths.TASKS + taskName
+    private var testsPath = taskPath + Paths.TESTS
     var filePath = "$taskPath/$fileName"
 
-    var status = Status.RUNNING.code
+    var status = Status.RUNNING
         private set
 
     var message = ""
@@ -33,7 +30,6 @@ class Submission(
 
     fun test() {
         class TestingResults(val level: String, val message: String)
-
         countOfTests = File(testsPath).listFiles()!!.size
         File(testsPath).listFiles()!!.forEach { testFile ->
             executePatcher(testFile.absolutePath)
@@ -42,7 +38,7 @@ class Submission(
             val logFile = File("$filePath.info")
 
             while (!logFile.exists()) {
-                Thread.sleep(Constants.WAIT_TIME.value)
+                Thread.sleep(Time.WAIT_IME)
             }
 
             val log = Klaxon().parseArray<TestingResults>(logFile)
@@ -56,17 +52,33 @@ class Submission(
         message = "Successful tests $countOfSuccessfulTests/$countOfTests"
     }
 
-    private fun executePatcher(poleFilePath: String) =
-        Runtime.getRuntime().exec("${TRIK.TWO_D_MODEL.text} $poleFilePath $filePath")
+    private fun executePatcher(poleFilePath: String) {
+        if (System.getProperty("os.name") == "Windows 10")
+            Runtime
+                .getRuntime()
+                .exec("${TRIKWindows.PATCHER} $poleFilePath $filePath")
+        else
+            Runtime
+                .getRuntime()
+                .exec("${TRIKLinux.PATCHER} $poleFilePath $filePath")
+    }
 
-    private fun execute2DModel() =
-        Runtime.getRuntime().exec("${TRIK.PATCHER.text} $filePath.info  $filePath")
+    private fun execute2DModel() {
+        if (System.getProperty("os.name") == "Windows 10")
+            Runtime
+                .getRuntime()
+                .exec("${TRIKWindows.TWO_D_MODEL} $filePath.info  $filePath")
+        else
+            Runtime
+                .getRuntime()
+                .exec("${TRIKLinux.TWO_D_MODEL} $filePath.info  $filePath")
+    }
 
     private fun accept() {
-        status = Status.OK.code
+        status = Status.OK
     }
 
     private fun deny() {
-        status = Status.FAILED.code
+        status = Status.FAILED
     }
 }

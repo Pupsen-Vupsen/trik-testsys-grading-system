@@ -1,7 +1,7 @@
 package server.service
 
 import org.springframework.web.multipart.MultipartFile
-import server.enum.Paths
+import server.constants.Constants.Paths
 
 import java.io.BufferedOutputStream
 import java.io.File
@@ -13,7 +13,7 @@ class FileUploader(private val file: MultipartFile, private val filePath: String
         if (file.isEmpty) return false
 
         val bytes = file.bytes
-        val uploadedFile = File(Paths.TASKS.text + filePath)
+        val uploadedFile = File(Paths.TASKS + filePath)
         val stream = BufferedOutputStream(FileOutputStream(uploadedFile))
 
         stream.write(bytes)
