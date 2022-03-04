@@ -36,9 +36,15 @@ class Submission(
             execute2DModel()
 
             val logFile = File("$filePath.info")
-
             while (!logFile.exists()) {
                 Thread.sleep(Time.WAIT_IME)
+            }
+
+            if(logFile.readBytes().isEmpty()) {
+                status = Status.FAILED
+                message = "Testing file is bad for testing!"
+                logFile.delete()
+                return
             }
 
             val log = Klaxon().parseArray<TestingResults>(logFile)
