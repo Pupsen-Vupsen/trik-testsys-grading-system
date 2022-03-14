@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "Pupsen&Vupsen"
-version = "1.0-SNAPSHOT"
+version = "0.1.2"
 java.sourceCompatibility = JavaVersion.VERSION_16
 
 repositories {
@@ -34,7 +34,6 @@ dependencies {
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     kotlinOptions {
         freeCompilerArgs = listOf("-Xjsr305=strict")
-        jvmTarget = "16"
     }
 }
 

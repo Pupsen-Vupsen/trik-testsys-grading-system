@@ -37,10 +37,10 @@ class Submission(
 
             val logFile = File("$filePath.info")
             while (!logFile.exists()) {
-                Thread.sleep(Time.WAIT_IME)
+                Thread.sleep(Time.WAIT_TIME)
             }
 
-            if(logFile.readBytes().isEmpty()) {
+            if (logFile.readBytes().isEmpty()) {
                 status = Status.FAILED
                 message = "Testing file is bad for testing!"
                 logFile.delete()
@@ -54,30 +54,56 @@ class Submission(
             logFile.delete()
         }
 
-        if (countOfSuccessfulTests == countOfTests) accept()
-        message = "Successful tests $countOfSuccessfulTests/$countOfTests"
+        if (countOfTests == 0) {
+            execute2DModel()
+            val logFile = File("$filePath.info")
+            while (!logFile.exists()) {
+                Thread.sleep(Time.WAIT_TIME)
+            }
+
+            if (logFile.readBytes().isEmpty()) {
+                status = Status.FAILED
+                message = "Testing file is bad for testing!"
+                logFile.delete()
+                return
+            }
+
+            val log = Klaxon().parseArray<TestingResults>(logFile)
+
+            message = if (log == null || log[0].level == "error") {
+                deny()
+                "Task failed("
+            } else {
+                accept()
+                log[0].message
+            }
+            logFile.delete()
+        } else {
+            if (countOfSuccessfulTests == countOfTests) accept()
+            message = "Successful tests $countOfSuccessfulTests/$countOfTests"
+        }
     }
 
     private fun executePatcher(poleFilePath: String) {
-        if (System.getProperty("os.name") == "Windows 10")
-            Runtime
-                .getRuntime()
-                .exec("${TRIKWindows.PATCHER} $poleFilePath $filePath")
-        else
-            Runtime
-                .getRuntime()
-                .exec("${TRIKLinux.PATCHER} $poleFilePath $filePath")
+//        if (System.getProperty("os.name") == "Windows 10")
+//            Runtime
+//                .getRuntime()
+//                .exec("${TRIKWindows.PATCHER} $poleFilePath $filePath")
+//        else
+        Runtime
+            .getRuntime()
+            .exec("${TRIKLinux.PATCHER} $poleFilePath $filePath")
     }
 
     private fun execute2DModel() {
-        if (System.getProperty("os.name") == "Windows 10")
-            Runtime
-                .getRuntime()
-                .exec("${TRIKWindows.TWO_D_MODEL} $filePath.info  $filePath")
-        else
-            Runtime
-                .getRuntime()
-                .exec("${TRIKLinux.TWO_D_MODEL} $filePath.info  $filePath")
+//        if (System.getProperty("os.name") == "Windows 10")
+//            Runtime
+//                .getRuntime()
+//                .exec("${TRIKWindows.TWO_D_MODEL} $filePath.info  $filePath")
+//        else
+        Runtime
+            .getRuntime()
+            .exec("${TRIKLinux.TWO_D_MODEL} $filePath.info  $filePath")
     }
 
     private fun accept() {

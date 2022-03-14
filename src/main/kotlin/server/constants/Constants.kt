@@ -14,13 +14,13 @@ class Constants {
     }
 
     object TRIKWindows {
-        const val TWO_D_MODEL = "C:\\TRIKStudio\\patcher.exe -f"
-        const val PATCHER = "C:\\TRIKStudio\\2D-model.exe -b -r"
+        const val TWO_D_MODEL = "TRIKStudio\\patcher.exe -f"
+        const val PATCHER = "TRIKStudio\\2D-model.exe -b -r"
     }
 
     object TRIKLinux {
-        const val TWO_D_MODEL = "/home/shisha/TRIKStudio/bin/2D-model -b -r"
-        const val PATCHER = "/home/shisha/TRIKStudio/bin/patcher -f"
+        const val TWO_D_MODEL = "./TRIKStudio/bin/2D-model -platform offscreen -b -r"
+        const val PATCHER = "./TRIKStudio/bin/patcher -f"
     }
 
     object Status {
@@ -35,6 +35,6 @@ class Constants {
     }
 
     object Time {
-        const val WAIT_IME = 10_000L
+        const val WAIT_TIME = 10_000L
     }
 }
