@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Async
 import org.springframework.scheduling.annotation.EnableAsync
 import org.springframework.stereotype.Service
+import java.util.concurrent.Executor
 
 @Service
 @EnableAsync
@@ -15,6 +16,9 @@ class SubmissionService {
 
     @Autowired
     lateinit var submissionRepository: SubmissionRepository
+
+    @Autowired
+    lateinit var executor: Executor
 
     fun getSubmissionOrNull(id: Long) = submissionRepository.findSubmissionById(id)
 
@@ -39,8 +43,10 @@ class SubmissionService {
 
     @Async
     fun testSubmission(id: Long) {
-        val submission = submissionRepository.findSubmissionById(id)!!
-        submission.test()
-        submissionRepository.save(submission)
+        executor.execute {
+            val submission = submissionRepository.findSubmissionById(id)!!
+            submission.test()
+            submissionRepository.save(submission)
+        }
     }
 }
