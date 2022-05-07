@@ -5,8 +5,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.web.servlet.MultipartConfigFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 import org.springframework.util.unit.DataSize
 import org.springframework.util.unit.DataUnit
+import java.util.concurrent.Executor
 import javax.servlet.MultipartConfigElement
 
 
@@ -20,6 +22,16 @@ class Application {
         factory.setMaxFileSize(DataSize.of(4, DataUnit.MEGABYTES))
         factory.setMaxRequestSize(DataSize.of(4, DataUnit.MEGABYTES))
         return factory.createMultipartConfig()
+    }
+
+    @Bean
+    fun executor(): Executor? {
+        val executor = ThreadPoolTaskExecutor()
+        executor.corePoolSize = 1
+        executor.maxPoolSize = 1
+        executor.setQueueCapacity(100)
+        executor.initialize()
+        return executor
     }
 
     companion object {
