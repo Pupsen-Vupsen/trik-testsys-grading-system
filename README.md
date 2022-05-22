@@ -1,3 +1,3 @@
-[![CodeFactor](https://www.codefactor.io/repository/github/5h15h4k1n9/trik-testsys-server/badge)](https://www.codefactor.io/repository/github/5h15h4k1n9/trik-testsys-server)
+[![CodeFactor](https://www.codefactor.io/repository/github/pupsen-vupsen/trik-testsys-grading-system/badge)](https://www.codefactor.io/repository/github/pupsen-vupsen/trik-testsys-grading-system)
 # trik-testsys-server
 Server part for TRIK Studio test system
