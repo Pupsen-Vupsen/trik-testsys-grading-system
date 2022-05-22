@@ -98,11 +98,12 @@ class SubmissionController {
         logger.info("Set $submissionId to new file.")
 
         val fileName = "$submissionId.qrs"
+        val testingFileName = "${submissionId}_testing.qrs"
         val fileUploader = FileUploader(file, "$taskName/$fileName")
 
         return try {
             if (fileUploader.upload()) {
-                submissionService.saveSubmission(Submission(submissionId, taskName, fileName))
+                submissionService.saveSubmission(Submission(submissionId, taskName, fileName, testingFileName))
                 submissionService.testSubmission(submissionId)
 
                 logger.info("Saved submission $submissionId.")

@@ -13,12 +13,15 @@ import javax.persistence.*
 class Submission(
     @Id val id: Long = 0,
     private val taskName: String = "",
-    private val fileName: String = ""
+    private val fileName: String = "",
+    private val testingFileName: String = ""
 ) {
 
     private var taskPath = Paths.TASKS + taskName
     private var testsPath = taskPath + Paths.TESTS
+
     var filePath = "$taskPath/$fileName"
+    var testingFilePath = "$taskPath/$testingFileName"
 
     var status = Status.RUNNING
         private set
@@ -31,6 +34,7 @@ class Submission(
     private var countOfSuccessfulTests = 0
 
     fun test() {
+        copyForTesting()
         val logger: Logger = LoggerFactory.getLogger(Submission::class.java)
         countOfTests = File(testsPath).listFiles()!!.size
 
@@ -93,7 +97,7 @@ class Submission(
                 val log = Klaxon().parseArray<TestingResults>(logFile)
 
                 message = if (log == null || log[0].level == "error") {
-                    logger.warn("Submission $id failed it's pwn tests.")
+                    logger.warn("Submission $id failed it's own tests.")
                     deny()
                     "Task failed("
                 } else {
@@ -118,12 +122,17 @@ class Submission(
     private fun executePatcher(poleFilePath: String) =
         Runtime
             .getRuntime()
-            .exec("${TRIKLinux.PATCHER} $poleFilePath $filePath")
+            .exec("${TRIKLinux.PATCHER} $poleFilePath $testingFilePath")
 
     private fun execute2DModel() =
         Runtime
             .getRuntime()
-            .exec("${TRIKLinux.TWO_D_MODEL} $filePath.info  $filePath")
+            .exec("${TRIKLinux.TWO_D_MODEL} $filePath.info $testingFilePath")
+
+    private fun copyForTesting() =
+        Runtime
+            .getRuntime()
+            .exec("cp $filePath $testingFilePath")
 
     private fun accept() {
         status = Status.OK
