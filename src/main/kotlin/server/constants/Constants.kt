@@ -19,7 +19,7 @@ class Constants {
     }
 
     object TRIKLinux {
-        const val TWO_D_MODEL = "./TRIKStudio/bin/2D-model -platform offscreen -b -r"
+        const val TWO_D_MODEL = "./TRIKStudio/bin/2D-model -platform offscreen -s 10 -b -r"
         const val PATCHER = "./TRIKStudio/bin/patcher -f"
     }
 
