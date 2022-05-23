@@ -26,10 +26,17 @@ RUN chmod +x ./$INSTALLER
 RUN ./$INSTALLER --am --al --confirm-command -t /$APP_DIR/$TRIK_STUDIO_DIR install
 RUN rm $INSTALLER
 
-#Copying and running application
-ARG JAR_FILE=build/libs/trik-testsys-0.1.8.jar
-ARG APP=app.jar
+#Copying scripts
 WORKDIR ../../../$APP_DIR
+COPY echo_pin.sh echo_pin.sh
+COPY generate_hash.sh generate_hash.sh
+
+#Copying tasks (only for testing container)
+#COPY tasks tasks
+
+#Copying and running application
+ARG JAR_FILE=build/libs/trik-testsys-0.1.9.jar
+ARG APP=app.jar
 COPY $JAR_FILE $APP
 EXPOSE 8080
 ENTRYPOINT java -jar app.jar
