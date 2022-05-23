@@ -11,10 +11,11 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
-import java.io.File
-import java.io.FileInputStream
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.io.File
+import java.io.FileInputStream
+import com.beust.klaxon.JsonObject
 
 @RestController
 class SubmissionController {
@@ -93,15 +94,19 @@ class SubmissionController {
                     .body(Requests.SUBMISSION_NOT_FOUND)
             }
 
-        val stream = try {
-            InputStreamResource(FileInputStream(File(submission.hashAndPinPath)))
-        } catch (e: Exception) {
-            logger.error("Caught exception: $e!")
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.toString())
-        }
+        if(submission.status != Status.OK)
+            return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body("Submission isn't successful.")
+
+        val (hash, pin) = File(submission.hashAndPinPath).readLines()
+        val json = JsonObject(mapOf("hash" to hash, "pin" to pin))
 
         logger.info("Returned submission $id hash and pin.")
-        return ResponseEntity.status(HttpStatus.OK).body(stream)
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(json)
+
     }
 
     private var submissionId = ID.DEFAULT_ID
