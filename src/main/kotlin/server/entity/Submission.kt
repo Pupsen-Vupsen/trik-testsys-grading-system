@@ -19,9 +19,12 @@ class Submission(
 
     private var taskPath = Paths.TASKS + taskName
     private var testsPath = taskPath + Paths.TESTS
+    private var pinRangeFile = "$taskPath/pin.txt"
 
     var filePath = "$taskPath/$fileName"
     var testingFilePath = "$taskPath/$testingFileName"
+
+    var hashAndPinPath = "$taskPath/${id}_hash_pin.txt"
 
     var status = Status.RUNNING
         private set
@@ -107,7 +110,12 @@ class Submission(
                 }
                 logFile.delete()
             } else {
-                if (countOfSuccessfulTests == countOfTests) accept()
+                if (countOfSuccessfulTests == countOfTests) {
+                    logger.info("Generating hash and pin for submission $id.")
+                    generateHashAndPin()
+                    logger.info("Generating completed!")
+                    accept()
+                }
 
                 logger.info("Submission $id passed $countOfSuccessfulTests/$countOfTests tests.")
                 message = "Successful tests $countOfSuccessfulTests/$countOfTests"
@@ -133,6 +141,34 @@ class Submission(
         Runtime
             .getRuntime()
             .exec("cp $filePath $testingFilePath")
+
+    private fun generateHashAndPin() {
+        Runtime
+            .getRuntime()
+            .exec("./generate_hash.sh $filePath $hashAndPinPath")
+        Thread.sleep(5_000)
+
+        val hash = File(hashAndPinPath).readLines()[0].reversed()
+        var newHash = ""
+        for(i in 0..7) {
+            newHash += hash[i * 4]
+        }
+        val range = getPinRange()
+        val pin = newHash.toLong(16) % range.first + range.second
+
+        Runtime
+            .getRuntime()
+            .exec("./echo_pin.sh $pin $hashAndPinPath")
+        Thread.sleep(5_000)
+    }
+    private fun getPinRange(): Pair<Int, Int> {
+        val strings = File(pinRangeFile).readLines()
+
+        val pinRange = strings[0].toInt()
+        val firstPin = strings[1].toInt()
+
+        return pinRange to firstPin
+    }
 
     private fun accept() {
         status = Status.OK

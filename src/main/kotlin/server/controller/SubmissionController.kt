@@ -82,6 +82,28 @@ class SubmissionController {
         return ResponseEntity.status(HttpStatus.OK).body(stream)
     }
 
+    @GetMapping("grading-system/submissions/submission/lectorium_info")
+    fun getHashAndPin(@RequestParam id: Long): ResponseEntity<Any> {
+        logger.info("Client requested submission $id hash and pin.")
+        val submission = submissionService.getSubmissionOrNull(id)
+            ?: run {
+                logger.warn("There is no submission with id $id")
+                return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(Requests.SUBMISSION_NOT_FOUND)
+            }
+
+        val stream = try {
+            InputStreamResource(FileInputStream(File(submission.hashAndPinPath)))
+        } catch (e: Exception) {
+            logger.error("Caught exception: $e!")
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.toString())
+        }
+
+        logger.info("Returned submission $id hash and pin.")
+        return ResponseEntity.status(HttpStatus.OK).body(stream)
+    }
+
     private var submissionId = ID.DEFAULT_ID
 
     @PostMapping("grading-system/submissions/submission/upload")
