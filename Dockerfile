@@ -2,41 +2,72 @@ FROM ubuntu:18.04
 MAINTAINER Roman Shishkin <romashkin.2001@yandex.ru>
 LABEL Description="This image is for grading system for TRIK Studio testing system"
 
+#Setting directories args
 ARG APP_DIR=grading-system
 ARG TRIK_STUDIO_DIR=TRIKStudio
+ARG INSTALLER_DIR=installer
 
-ARG INSTALLER=trik-studio-installer-gnu64.run
+#Setting installers args
+ARG INSTALLER=installer.run
+ARG RELEASE_INSTALLER_URL=https://dl.trikset.com/ts/trik-studio-installer-gnu64.run
+ARG MASTER_INSTALLER_URL=https://dl.trikset.com/ts/fresh/installer/trik-studio-installer-linux-master.run
 
 #Updating system
-RUN apt -y update
+WORKDIR /
+RUN apt-get -y update
 
-#Installing openjdk
-RUN apt install -y default-jdk
+#Installing utils
+WORKDIR /
+RUN apt-get -y install apt-utils default-jdk wget curl qt5-default
 
-#Installing wget
-RUN apt install -y wget
+#Copying intalling script for master installer
+WORKDIR /$APP_DIR/$INSTALLER_DIR
+COPY docker/trik_studio_installscript.qs install_script.qs
 
-#Installing QT5
-RUN apt install -y qt5-default
+#Downloading TRIK Studio
+WORKDIR /$APP_DIR/$INSTALLER_DIR
+RUN curl --output $INSTALLER $MASTER_INSTALLER_URL
 
-#Installing TRIK Studio
-WORKDIR $TRIK_STUDIO_DIR/installer
-RUN wget https://dl.trikset.com/ts/$INSTALLER
-RUN chmod +x ./$INSTALLER
-RUN ./$INSTALLER --am --al --confirm-command -t /$APP_DIR/$TRIK_STUDIO_DIR install
-RUN rm $INSTALLER
+#Setting installer executable
+WORKDIR /$APP_DIR/$INSTALLER_DIR
+RUN chmod +x $INSTALLER
+
+#Checking installer sha1 sum
+WORKDIR /$APP_DIR/$INSTALLER_DIR
+ARG INSTALLER_SHA1_SUM=c0732c4
+RUN ./$INSTALLER --version | grep -F $INSTALLER_SHA1_SUM
+
+#Installing TRIKStudio
+WORKDIR /$APP_DIR
+#Command to install master version
+RUN env INSTALL_DIR=/$APP_DIR/$TRIK_STUDIO_DIR ./$INSTALLER_DIR/$INSTALLER --script ./$INSTALLER_DIR/install_script.qs --platform minimal --verbose
+#Command to install release version
+#RUN ./$INSTALLER --am --al --confirm-command -t /$APP_DIR/$TRIK_STUDIO_DIR install
+
+#Checking TRIK Studio version
+WORKDIR /$APP_DIR/$TRIK_STUDIO_DIR
+ARG TRIK_STUDIO_VERSION=2022.1-7-g3e1af1
+RUN ./trik-studio -platform offscreen --version | grep -F $TRIK_STUDIO_VERSION
+
+#Removing installer and script
+WORKDIR /$APP_DIR
+RUN rm -r $INSTALLER_DIR
 
 #Copying scripts
-WORKDIR ../../../$APP_DIR
-COPY echo_pin.sh echo_pin.sh
-COPY generate_hash.sh generate_hash.sh
+WORKDIR /$APP_DIR
+COPY docker/echo_pin.sh echo_pin.sh
+COPY docker/generate_hash.sh generate_hash.sh
 
-#Copying tasks (only for testing container)
+##Copying tasks (only for testing container)
+#WORKDIR /$APP_DIR
 #COPY tasks tasks
 
-#Copying and running application
-ARG JAR_FILE=build/libs/trik-testsys-0.1.9.jar
+#Copying application
+WORKDIR /$APP_DIR
+ARG JAR_FILE=build/libs/trik-testsys-0.1.12.jar
 ARG APP=app.jar
 COPY $JAR_FILE $APP
+
+#Running application
 EXPOSE 8080
 ENTRYPOINT java -jar app.jar
