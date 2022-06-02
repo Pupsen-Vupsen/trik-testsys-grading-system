@@ -111,10 +111,10 @@ class Submission(
                 logFile.delete()
             } else {
                 if (countOfSuccessfulTests == countOfTests) {
+                    accept()
                     logger.info("Generating hash and pin for submission $id.")
                     generateHashAndPin()
                     logger.info("Generating completed!")
-                    accept()
                 }
 
                 logger.info("Submission $id passed $countOfSuccessfulTests/$countOfTests tests.")
