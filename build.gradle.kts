@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "Pupsen&Vupsen"
-version = "0.1.9"
+version = "0.1.12"
 java.sourceCompatibility = JavaVersion.VERSION_16
 
 repositories {
