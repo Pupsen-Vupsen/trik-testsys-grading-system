@@ -6,7 +6,7 @@ pull_request_rules:
       merge:
         method: merge
       delete_head_branch:
-  - name: Assigning pull request to 5h15h4k1n9
+  - name: Assign pull request to 5h15h4k1n9
     actions:
       assign:
         add_users:
