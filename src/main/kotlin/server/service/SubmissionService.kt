@@ -4,6 +4,8 @@ import server.entity.Submission
 import server.repository.SubmissionRepository
 import server.constants.Constants.Status
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Async
 import org.springframework.scheduling.annotation.EnableAsync
@@ -13,6 +15,8 @@ import java.util.concurrent.Executor
 @Service
 @EnableAsync
 class SubmissionService {
+
+    val logger: Logger = LoggerFactory.getLogger(Submission::class.java)
 
     @Autowired
     lateinit var submissionRepository: SubmissionRepository
@@ -42,11 +46,9 @@ class SubmissionService {
     }
 
     @Async
-    fun testSubmission(id: Long) {
-        executor.execute {
-            val submission = submissionRepository.findSubmissionById(id)!!
-            submission.test()
-            submissionRepository.save(submission)
-        }
+    fun testSubmission(id: Long) = executor.execute {
+        val submission = submissionRepository.findSubmissionById(id)!!
+        submission.test()
+        submissionRepository.save(submission)
     }
 }

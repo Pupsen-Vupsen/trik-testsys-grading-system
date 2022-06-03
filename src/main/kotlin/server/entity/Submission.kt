@@ -12,33 +12,34 @@ import javax.persistence.*
 @Table(name = "SUBMISSIONS")
 class Submission(
     @Id val id: Long = 0,
-    private val taskName: String = "",
-    private val fileName: String = "",
-    private val testingFileName: String = ""
+    taskName: String = "",
+    fileName: String = "",
+    testingFileName: String = ""
 ) {
+    private val taskPath = Paths.TASKS + taskName
+    private val testsPath = taskPath + Paths.TESTS
+    private val pinRangeFile = "$taskPath/pin.txt"
 
-    private var taskPath = Paths.TASKS + taskName
-    private var testsPath = taskPath + Paths.TESTS
-    private var pinRangeFile = "$taskPath/pin.txt"
+    val filePath = "$taskPath/$fileName"
+    private val testingFilePath = "$taskPath/$testingFileName"
+    private val hashAndPinPath = "$taskPath/${id}_hash_pin.txt"
 
-    var filePath = "$taskPath/$fileName"
-    var testingFilePath = "$taskPath/$testingFileName"
-
-    var hashAndPinPath = "$taskPath/${id}_hash_pin.txt"
-
+    var pin: String? = null
+        private set
+    var hash: String? = null
+        private set
     var status = Status.RUNNING
         private set
 
-    var message = ""
-        private set
-
+    private var message = ""
     private var countOfTests = 0
-
     private var countOfSuccessfulTests = 0
 
     fun test() {
-        copyForTesting()
         val logger: Logger = LoggerFactory.getLogger(Submission::class.java)
+
+        logger.info("Copied submission file for testing.")
+        copyForTesting()
         countOfTests = File(testsPath).listFiles()!!.size
 
         class TestingResults(val level: String, val message: String)
@@ -160,6 +161,10 @@ class Submission(
             .getRuntime()
             .exec("./echo_pin.sh $pin $hashAndPinPath")
         Thread.sleep(5_000)
+
+        val strings = File(hashAndPinPath).readLines()
+        this.hash = strings[0]
+        this.pin = strings[1]
     }
     private fun getPinRange(): Pair<Int, Int> {
         val strings = File(pinRangeFile).readLines()
