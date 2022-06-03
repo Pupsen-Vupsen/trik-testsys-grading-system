@@ -11,3 +11,12 @@ pull_request_rules:
       assign:
         add_users:
           - 5h15h4k1n9
+  - name: Add `Kotlin` label, if files associated with Kotlin were changed
+    conditions:
+      - or:
+        - files~=\.kt$
+        - files~=\.kts$
+    actions:
+      label:
+        add:
+          - kotlin
