@@ -16,15 +16,19 @@ class Submission(
     private val fileName: String = "",
     private val testingFileName: String = ""
 ) {
+    private val taskPath = Paths.TASKS + taskName
+    private val testsPath = taskPath + Paths.TESTS
+    private val pinRangeFile = "$taskPath/pin.txt"
 
-    private var taskPath = Paths.TASKS + taskName
-    private var testsPath = taskPath + Paths.TESTS
-    private var pinRangeFile = "$taskPath/pin.txt"
+    val filePath = "$taskPath/$fileName"
+    private val testingFilePath = "$taskPath/$testingFileName"
 
-    var filePath = "$taskPath/$fileName"
-    var testingFilePath = "$taskPath/$testingFileName"
+    var pin: String? = null
+        private set
+    var hash: String? = null
+        private set
 
-    var hashAndPinPath = "$taskPath/${id}_hash_pin.txt"
+    private val hashAndPinPath = "$taskPath/${id}_hash_pin.txt"
 
     var status = Status.RUNNING
         private set
@@ -160,6 +164,10 @@ class Submission(
             .getRuntime()
             .exec("./echo_pin.sh $pin $hashAndPinPath")
         Thread.sleep(5_000)
+
+        val strings = File(hashAndPinPath).readLines()
+        this.hash = strings[0]
+        this.pin = strings[1]
     }
     private fun getPinRange(): Pair<Int, Int> {
         val strings = File(pinRangeFile).readLines()

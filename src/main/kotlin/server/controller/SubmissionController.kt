@@ -100,8 +100,7 @@ class SubmissionController {
                 .status(HttpStatus.NOT_FOUND)
                 .body("Submission isn't successful.")
 
-        val (hash, pin) = File(submission.hashAndPinPath).readLines()
-        val json = JsonObject(mapOf("hash" to hash, "pin" to pin))
+        val json = JsonObject(mapOf("hash" to submission.hash, "pin" to submission.pin))
 
         logger.info("Returned submission $id hash and pin.")
         return ResponseEntity
