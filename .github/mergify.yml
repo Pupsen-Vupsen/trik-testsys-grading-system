@@ -1,7 +1,9 @@
 pull_request_rules:
-  - name: Automatic merge on successful build
+  - name: Automatic merge to master on successful build if it's not WIP
     conditions:
+      - base=master
       - check-success=build
+      - -title~=(?i)wip
     actions:
       merge:
         method: merge
