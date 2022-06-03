@@ -4,10 +4,7 @@
 
 # Server part for TRIK Studio grading system
 
----
 ## Overview 
-
-----
 
 Grading system server part for TRIK Studio, which allows you to test you task using TRIK Studio engine.
 
