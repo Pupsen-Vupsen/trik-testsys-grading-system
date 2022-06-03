@@ -12,9 +12,9 @@ import javax.persistence.*
 @Table(name = "SUBMISSIONS")
 class Submission(
     @Id val id: Long = 0,
-    private val taskName: String = "",
-    private val fileName: String = "",
-    private val testingFileName: String = ""
+    taskName: String = "",
+    fileName: String = "",
+    testingFileName: String = ""
 ) {
     private val taskPath = Paths.TASKS + taskName
     private val testsPath = taskPath + Paths.TESTS
@@ -22,27 +22,24 @@ class Submission(
 
     val filePath = "$taskPath/$fileName"
     private val testingFilePath = "$taskPath/$testingFileName"
+    private val hashAndPinPath = "$taskPath/${id}_hash_pin.txt"
 
     var pin: String? = null
         private set
     var hash: String? = null
         private set
-
-    private val hashAndPinPath = "$taskPath/${id}_hash_pin.txt"
-
     var status = Status.RUNNING
         private set
 
-    var message = ""
-        private set
-
+    private var message = ""
     private var countOfTests = 0
-
     private var countOfSuccessfulTests = 0
 
     fun test() {
-        copyForTesting()
         val logger: Logger = LoggerFactory.getLogger(Submission::class.java)
+
+        logger.info("Copied submission file for testing.")
+        copyForTesting()
         countOfTests = File(testsPath).listFiles()!!.size
 
         class TestingResults(val level: String, val message: String)
