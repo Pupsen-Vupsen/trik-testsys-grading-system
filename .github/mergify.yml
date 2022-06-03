@@ -20,10 +20,10 @@ pull_request_rules:
       label:
         add:
           - kotlin
- - name: Add `Dockerfile` label, if Dockerfile was changed
-   conditions:
-     - files~=\Dockerfile$
-   actions:
-     label:
-       add:
-         - Dockerfile
+  - name: Add `Dockerfile` label, if Dockerfile was changed
+    conditions:
+      - files~=\Dockerfile$
+    actions:
+      label:
+        add:
+          - Dockerfile
