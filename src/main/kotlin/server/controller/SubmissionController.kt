@@ -64,6 +64,7 @@ class SubmissionController {
     @GetMapping("grading-system/submissions/submission/download")
     fun getSubmissionFile(@RequestParam id: Long): ResponseEntity<Any> {
         logger.info("Client requested submission $id file.")
+
         val submission = submissionService.getSubmissionOrNull(id)
             ?: run {
                 logger.warn("There is no submission with id $id")
@@ -94,7 +95,7 @@ class SubmissionController {
                     .body(Requests.SUBMISSION_NOT_FOUND)
             }
 
-        if(submission.status != Status.OK)
+        if (submission.status != Status.OK)
             return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body("Submission isn't successful.")
@@ -106,7 +107,6 @@ class SubmissionController {
         return ResponseEntity
             .status(HttpStatus.OK)
             .body(json)
-
     }
 
     private var submissionId = ID.DEFAULT_ID
