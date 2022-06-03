@@ -2,6 +2,25 @@
 ![GitHub](https://img.shields.io/github/license/Pupsen-Vupsen/trik-testsys-grading-system?color=blue&logo=apache)
 [![CodeFactor](https://www.codefactor.io/repository/github/pupsen-vupsen/trik-testsys-grading-system/badge)](https://www.codefactor.io/repository/github/pupsen-vupsen/trik-testsys-grading-system)
 
-# trik-testsys-server
+# Server part for TRIK Studio grading system
 
-Server part for TRIK Studio test system
+---
+## Overview 
+
+----
+
+Grading system server part for TRIK Studio, which allows you to test you task using TRIK Studio engine.
+
+## How to run locally
+
+1. Copy this repository to your local machine.
+2. Install Java version 16 or later.
+3. Move to the root of the project.
+4. Run `./gradlew :bootJar`.
+5. Run `java -jar ./build/libs/trik-testsys-*version*.jar`.
+
+## How to run via Docker
+
+1. Install Docker to your local machine.
+2. Run `docker pull 5h15h4k1n9/trik-testsys-grading-system`.
+3. Run `docker run -it -p 8080:8080 5h15h4k1n9/trik-testsys-grading-system`.
