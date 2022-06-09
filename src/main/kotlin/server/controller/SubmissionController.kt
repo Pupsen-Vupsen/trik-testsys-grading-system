@@ -1,7 +1,6 @@
 package server.controller
 
 import server.service.SubmissionService
-import server.service.FileUploader
 import server.entity.Submission
 import server.constants.Constants.*
 
