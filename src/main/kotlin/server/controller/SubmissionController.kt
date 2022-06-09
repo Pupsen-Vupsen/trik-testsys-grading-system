@@ -137,7 +137,7 @@ class SubmissionController {
                     .status(HttpStatus.OK)
                     .body(submissionId)
             } else {
-                logger.warn("Uploading file is empty.")
+                logger.warn("Uploading file is empty or not .qrs file.")
 
                 ResponseEntity
                     .status(HttpStatus.UNPROCESSABLE_ENTITY)

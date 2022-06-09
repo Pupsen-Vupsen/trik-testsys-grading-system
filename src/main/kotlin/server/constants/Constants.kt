@@ -10,7 +10,7 @@ class Constants {
     object Requests {
         const val SUBMISSION_NOT_FOUND = "Submission with this id does not exist."
         const val NO_SUBMISSIONS = "There is no submissions."
-        const val EMPTY_FILE = "Uploading file is empty."
+        const val EMPTY_FILE = "Uploading file is empty or not .qrs file."
     }
 
     object TRIKWindows {
