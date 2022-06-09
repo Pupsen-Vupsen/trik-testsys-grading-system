@@ -1,20 +1,3 @@
-#spring.datasource.driverClassName=org.h2.Driver
-#spring.datasource.url=jdbc:h2:file:./src/main/resources/data/submissions;AUTO_SERVER=true
-#spring.datasource.username=admin
-#spring.datasource.password=password
-#spring.jpa.generate-ddl=true
-#spring.jpa.database=h2
-#spring.jpa.hibernate.ddl-auto=update
-#logging.file.name=./logs/server.log
-#spring.h2.console.enabled=true
-#spring.h2.console.settings.web-allow-others=false
-#spring.datasource.url=jdbc:h2:file:./data/submission
-#spring.datasource.driverClassName=org.h2.Driver
-#spring.datasource.username=sa
-#spring.datasource.password=password
-#spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
-#spring.jpa.defer-datasource-initialization=true
-#spring.jpa.generate-ddl=true
 spring:
   datasource:
     url: jdbc:h2:file:./data/submissions
@@ -25,3 +8,9 @@ spring:
     database-platform: org.hibernate.dialect.H2Dialect
     defer-datasource-initialization: true
     generate-ddl: true
+logging:
+  file:
+    name: ./logs/server.log
+  logback:
+    rollingpolicy:
+      clean-history-on-start: false
