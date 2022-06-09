@@ -10,7 +10,9 @@ spring:
     generate-ddl: true
 logging:
   file:
-    name: ./logs/server.log
+    path: ./logs
+    name: server.log
   logback:
     rollingpolicy:
       clean-history-on-start: false
+      max-history: 31
