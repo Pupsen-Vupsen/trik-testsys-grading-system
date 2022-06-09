@@ -16,8 +16,7 @@ spring:
         web-allow-others: true
 logging:
   file:
-    path: ./logs
-    name: server.log
+    name: ./logs/server.log
   logback:
     rollingpolicy:
       clean-history-on-start: false
