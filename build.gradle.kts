@@ -1,8 +1,9 @@
 plugins {
-    id("org.springframework.boot") version "2.6.2"
+    id("org.springframework.boot") version "2.7.0"
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
     kotlin("jvm") version "1.6.10"
-    kotlin("plugin.spring") version "1.6.10"
+    kotlin("plugin.spring") version "1.6.21"
+    kotlin("plugin.jpa") version "1.6.21"
 }
 
 group = "Pupsen&Vupsen"
@@ -22,10 +23,10 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
+    implementation("org.springframework.boot:spring-boot-devtools")
 
-    implementation("com.h2database:h2")
+    runtimeOnly("com.h2database:h2")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-
     implementation("com.beust:klaxon:5.5")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
