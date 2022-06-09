@@ -1,4 +1,4 @@
-package server.service
+package server.controller
 
 import org.springframework.web.multipart.MultipartFile
 import server.constants.Constants.Paths
