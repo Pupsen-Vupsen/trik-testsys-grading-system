@@ -9,6 +9,4 @@ import org.springframework.stereotype.Repository
 interface SubmissionRepository : CrudRepository<Submission, String> {
 
     fun findSubmissionById(id: Long): Submission?
-
-    fun findSubmissionByFilePathAndStatus(filePath: String, status: String): Submission?
 }
