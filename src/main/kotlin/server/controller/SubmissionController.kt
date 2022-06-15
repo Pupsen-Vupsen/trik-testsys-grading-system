@@ -2,7 +2,7 @@ package server.controller
 
 import server.service.SubmissionService
 import server.entity.Submission
-import server.constants.Constants.*
+import server.enum.Requests
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.io.InputStreamResource
@@ -15,6 +15,8 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileInputStream
 import com.beust.klaxon.JsonObject
+import server.enum.Id
+import server.enum.Status
 
 @RestController
 class SubmissionController {
@@ -33,7 +35,7 @@ class SubmissionController {
                 logger.warn("There are no submissions.")
                 return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
-                    .body(Requests.NO_SUBMISSIONS)
+                    .body(Requests.NO_SUBMISSIONS.text)
             }
 
         logger.info("Returned all submissions.")
@@ -51,7 +53,7 @@ class SubmissionController {
                 logger.warn("There is no submission with id $id")
                 return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
-                    .body(Requests.SUBMISSION_NOT_FOUND)
+                    .body(Requests.SUBMISSION_NOT_FOUND.text)
             }
 
         logger.info("Returned submission $id status.")
@@ -94,7 +96,7 @@ class SubmissionController {
                     .body(Requests.SUBMISSION_NOT_FOUND)
             }
 
-        if (submission.status != Status.OK)
+        if (submission.status != Status.OK.symbol)
             return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body("Submission isn't successful.")
@@ -107,7 +109,7 @@ class SubmissionController {
             .body(json)
     }
 
-    private var submissionId = ID.DEFAULT_ID
+    private var submissionId = Id.DEFAULT.value
 
     @PostMapping("grading-system/submissions/submission/upload")
     fun postSubmission(
@@ -116,8 +118,8 @@ class SubmissionController {
     ): ResponseEntity<Any> {
         logger.info("Got file!")
 
-        if (submissionId == ID.DEFAULT_ID)
-            submissionId = submissionService.getLastSubmissionIdOrNull() ?: ID.FIRST_ID
+        if (submissionId == Id.DEFAULT.value)
+            submissionId = submissionService.getLastSubmissionIdOrNull() ?: Id.FIRST.value
         submissionId++
 
         logger.info("Set $submissionId to new file.")
@@ -128,7 +130,7 @@ class SubmissionController {
 
         return try {
             if (fileUploader.upload()) {
-                submissionService.saveSubmission(Submission(submissionId, taskName, fileName, testingFileName))
+                submissionService.saveSubmission(Submission(submissionId, taskName))
                 submissionService.testSubmission(submissionId)
 
                 logger.info("Saved submission $submissionId.")
