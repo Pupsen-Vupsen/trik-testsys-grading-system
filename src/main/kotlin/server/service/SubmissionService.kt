@@ -1,7 +1,7 @@
 package server.service
 
 import com.beust.klaxon.Klaxon
-import org.apache.tomcat.util.json.JSONParser
+
 import server.entity.Submission
 import server.repository.SubmissionRepository
 import server.enum.*
@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Async
 import org.springframework.scheduling.annotation.EnableAsync
 import org.springframework.stereotype.Service
+
 import java.io.File
 import java.util.concurrent.Executor
 
@@ -95,15 +96,20 @@ class SubmissionService {
                     if (log == null || log[0].level == "error") {
                         logger.info("${submission.id}: Submission failed test ${poleFile.name}.")
                         submission.deny()
-                    } else logger.info("${submission.id}: Submission passed test ${poleFile.name}.")
+                    } else {
+                        submission.countOfSuccessfulTests++
+                        logger.info("${submission.id}: Submission passed test ${poleFile.name}.")
+                    }
                 }
             }
 
             if (submission.countOfSuccessfulTests == submission.countOfTests) {
                 submission.accept()
-                logger.info("${submission.id}: Successful test ${submission.countOfSuccessfulTests}/${submission.countOfTests}.")
+                logger.info("${submission.id}: Started generating hash and pin.")
+                generateHashAndPin(submission)
+                logger.info("${submission.id}: Successfully generated hash and pin.")
             }
-
+            logger.info("${submission.id}: Successful tests ${submission.countOfSuccessfulTests}/${submission.countOfTests}.")
         } catch (e: Exception) {
             logger.error("${submission.id}: Caught exception! ${e.stackTraceToString()}")
             submission.deny()
@@ -119,6 +125,7 @@ class SubmissionService {
                 "${TRIKLinux.PATCHER.command} $submissionDir${Paths.TESTS}/$poleFilename " +
                         "$submissionDir${FilePostfixes.TESTING.text}${FilePostfixes.QRS.text}"
             ).waitFor()
+        Thread.sleep(10_000)
     }
 
     private fun execute2DModel(submissionId: Long) {
@@ -131,36 +138,39 @@ class SubmissionService {
             ).waitFor()
     }
 
-    private fun generateHashAndPin() {
-//        Runtime
-//            .getRuntime()
-//            .exec("./generate_hash.sh $filePath $hashAndPinPath")
-//        Thread.sleep(5_000)
-//
-//        val hash = File(hashAndPinPath).readLines()[0].reversed()
-//        var newHash = ""
-//        for(i in 0..7) {
-//            newHash += hash[i * 4]
-//        }
-//        val range = getPinRange()
-//        val pin = newHash.toLong(16) % range.first + range.second
-//
-//        Runtime
-//            .getRuntime()
-//            .exec("./echo_pin.sh $pin $hashAndPinPath")
-//        Thread.sleep(5_000)
-//
-//        val strings = File(hashAndPinPath).readLines()
-//        this.hash = strings[0]
-//        this.pin = strings[1]
-//    }
-//    private fun getPinRange(): Pair<Int, Int> {
-//        val strings = File(pinRangeFile).readLines()
-//
-//        val pinRange = strings[0].toInt()
-//        val firstPin = strings[1].toInt()
-//
-//        return pinRange to firstPin
-//    }
+    private fun generateHashAndPin(submission: Submission) {
+        val submissionFilePath = Paths.SUBMISSIONS.text + "${submission.id}/submission" + FilePostfixes.QRS.text
+        val hashAndPinFilePath = Paths.SUBMISSIONS.text + "${submission.id}/" + FilePostfixes.HASH_PIN_TXT.text
+        Runtime
+            .getRuntime()
+            .exec("./generate_hash.sh $submissionFilePath $hashAndPinFilePath")
+            .waitFor()
+
+        val hash = File(hashAndPinFilePath).readLines()[0].reversed()
+        var newHash = ""
+        for (i in 0..7) {
+            newHash += hash[i * 4]
+        }
+        val range = getPinRange(submission.id)
+        val pin = newHash.toLong(16) % range.first + range.second
+
+        Runtime
+            .getRuntime()
+            .exec("./echo_pin.sh $pin $hashAndPinFilePath")
+            .waitFor()
+
+        val strings = File(hashAndPinFilePath).readLines()
+        submission.hash = strings[0]
+        submission.pin = strings[1]
+    }
+
+    private fun getPinRange(submissionId: Long): Pair<Long, Long> {
+        val pinRangeFilePath = Paths.SUBMISSIONS.text + "$submissionId/" + Paths.PIN.text
+        val strings = File(pinRangeFilePath).readLines()
+
+        val pinRange = strings[0].toLong()
+        val firstPin = strings[1].toLong()
+
+        return pinRange to firstPin
     }
 }
