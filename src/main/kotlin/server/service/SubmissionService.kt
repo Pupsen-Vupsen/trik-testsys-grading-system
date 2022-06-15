@@ -57,12 +57,12 @@ class SubmissionService {
         val taskPath = Paths.TASKS.text + submission.taskName
         val submissionDir = Paths.SUBMISSIONS.text + "${submission.id}"
         File(taskPath).copyRecursively(File(submissionDir))
-        logger.info("Copied tests poles and pin.txt.")
+        logger.info("[$id]: Copied tests poles and pin.txt.")
 
         val submissionFilePath = submissionDir + "/submission" + FilePostfixes.QRS.text
         val testingFilePath = submissionDir + "/testing" + FilePostfixes.QRS.text
         File(submissionFilePath).copyTo(File(testingFilePath))
-        logger.info("Copied submission ${submission.id} for testing.")
+        logger.info("[$id]: Copied submission for testing.")
 
         return File(taskPath + "/" + Paths.TESTS.text).listFiles()!!.size
     }
@@ -76,42 +76,42 @@ class SubmissionService {
         val testsDir = Paths.SUBMISSIONS.text + "${submission.id}/" + Paths.TESTS.text
         val logFilePath = Paths.SUBMISSIONS.text + "${submission.id}/" + FilePostfixes.RESULT.text
 
-        logger.info("${submission.id}: Started testing. Count of tests ${submission.countOfTests}")
+        logger.info("[$id]: Started testing. Count of tests ${submission.countOfTests}.")
         try {
             File(testsDir).listFiles()!!.forEach { poleFile ->
                 executePatcher(submission.id, poleFile.name)
-                logger.info("${submission.id}: Patched with ${poleFile.name}.")
+                logger.info("[$id]: Patched with ${poleFile.name}.")
 
                 execute2DModel(submission.id)
-                logger.info("${submission.id}: Executed on test ${poleFile.name}.")
+                logger.info("[$id]: Executed on test ${poleFile.name}.")
 
                 val logFile = File(logFilePath)
 
                 if (logFile.readBytes().isEmpty()) {
                     submission.deny()
-                    logger.warn("${submission.id}: Cannot generate correct log file.")
+                    logger.warn("[$id]: Cannot generate correct log file.")
                     logFile.delete()
                 } else {
                     val log = Klaxon().parseArray<TestingResults>(logFile)
                     if (log == null || log[0].level == "error") {
-                        logger.info("${submission.id}: Submission failed test ${poleFile.name}.")
+                        logger.info("[$id]: Submission failed test ${poleFile.name}.")
                         submission.deny()
                     } else {
                         submission.countOfSuccessfulTests++
-                        logger.info("${submission.id}: Submission passed test ${poleFile.name}.")
+                        logger.info("[$id]: Submission passed test ${poleFile.name}.")
                     }
                 }
             }
 
             if (submission.countOfSuccessfulTests == submission.countOfTests) {
                 submission.accept()
-                logger.info("${submission.id}: Started generating hash and pin.")
+                logger.info("[$id]: Started generating hash and pin.")
                 generateHashAndPin(submission)
-                logger.info("${submission.id}: Successfully generated hash and pin.")
+                logger.info("[$id]: Successfully generated hash and pin.")
             }
-            logger.info("${submission.id}: Successful tests ${submission.countOfSuccessfulTests}/${submission.countOfTests}.")
+            logger.info("[$id]: Successful tests ${submission.countOfSuccessfulTests}/${submission.countOfTests}.")
         } catch (e: Exception) {
-            logger.error("${submission.id}: Caught exception! ${e.stackTraceToString()}")
+            logger.error("[$id]: Caught exception while testing file: ${e.stackTraceToString()}!")
             submission.deny()
         }
         submissionRepository.save(submission)
