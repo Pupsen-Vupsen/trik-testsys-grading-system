@@ -3,7 +3,7 @@ package server.constants
 class Constants {
 
     object Paths {
-        const val TASKS = "/tasks/"
+        const val TASKS = "tasks/"
         const val TESTS = "/tests"
     }
 
