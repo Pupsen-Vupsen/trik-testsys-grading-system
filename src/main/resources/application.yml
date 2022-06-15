@@ -17,8 +17,16 @@ spring:
         web-allow-others: true                           # Allows getting access to db while application is running
 logging:
   file:
-    name: ./logs/server.log                              # Path to log file
+    name: "logs/server.log"                              # Path to log file
   logback:
     rollingpolicy:
       clean-history-on-start: false                      # Not cleaning history on start
       max-history: 31                                    # Stores a month of logs
+server:
+  ssl:
+    key-store: classpath:keystore/grading-system.p12
+    key-store-type: pkcs12
+    key-alias: grading-system
+    key-store-password: qwerty123456
+    enabled: true
+  port: 8080
