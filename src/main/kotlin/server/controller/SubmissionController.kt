@@ -46,17 +46,17 @@ class SubmissionController {
 
     @GetMapping("grading-system/submissions/submission/status")
     fun getSubmissionStatus(@RequestParam id: Long): ResponseEntity<String> {
-        logger.info("Client requested submission $id status.")
+        logger.info("[$id]: Client requested submission status.")
 
         val submission = submissionService.getSubmissionOrNull(id)
             ?: run {
-                logger.warn("There is no submission with id $id")
+                logger.warn("[$id]: There is no submission with this id.")
                 return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
                     .body(Requests.SUBMISSION_NOT_FOUND.text)
             }
 
-        logger.info("Returned submission $id status.")
+        logger.info("[$id]: Returned submission status.")
         return ResponseEntity
             .status(HttpStatus.OK)
             .body(submission.status.toString())
@@ -64,11 +64,11 @@ class SubmissionController {
 
     @GetMapping("grading-system/submissions/submission/download")
     fun getSubmissionFile(@RequestParam id: Long): ResponseEntity<Any> {
-        logger.info("Client requested submission $id file.")
+        logger.info("[$id]: Client requested submission file.")
 
         val submission = submissionService.getSubmissionOrNull(id)
             ?: run {
-                logger.warn("There is no submission with id $id")
+                logger.warn("[$id]: There is no submission with this id.")
                 return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
                     .body(Requests.SUBMISSION_NOT_FOUND)
@@ -79,20 +79,20 @@ class SubmissionController {
         val stream = try {
             InputStreamResource(FileInputStream(File(submissionFilePath)))
         } catch (e: Exception) {
-            logger.error("Caught exception: $e!")
+            logger.error("[$id]: Caught exception while returning file: ${e.stackTraceToString()}!")
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.toString())
         }
 
-        logger.info("Returned submission $id file.")
+        logger.info("[$id]: Returned submission file.")
         return ResponseEntity.status(HttpStatus.OK).body(stream)
     }
 
     @GetMapping("grading-system/submissions/submission/lectorium_info")
     fun getHashAndPin(@RequestParam id: Long): ResponseEntity<Any> {
-        logger.info("Client requested submission $id hash and pin.")
+        logger.info("[$id]: Client requested submission hash and pin.")
         val submission = submissionService.getSubmissionOrNull(id)
             ?: run {
-                logger.warn("There is no submission with id $id")
+                logger.warn("[$id]: There is no submission with this id.")
                 return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
                     .body(Requests.SUBMISSION_NOT_FOUND)
@@ -105,7 +105,7 @@ class SubmissionController {
 
         val json = JsonObject(mapOf("hash" to submission.hash, "pin" to submission.pin))
 
-        logger.info("Returned submission $id hash and pin.")
+        logger.info("[$id]: Returned submission hash and pin.")
         return ResponseEntity
             .status(HttpStatus.OK)
             .body(json)
@@ -124,7 +124,7 @@ class SubmissionController {
             submissionId = submissionService.getLastSubmissionIdOrNull() ?: Id.FIRST.value
         submissionId++
 
-        logger.info("Set $submissionId to new file.")
+        logger.info("[$submissionId]: Set id to new file.")
         val fileUploader = FileUploader(file, submissionId)
 
         return try {
@@ -132,19 +132,19 @@ class SubmissionController {
                 submissionService.saveSubmission(Submission(submissionId, taskName))
                 submissionService.testSubmission(submissionId)
 
-                logger.info("Saved submission $submissionId.")
+                logger.info("[$submissionId]: Saved submission.")
                 ResponseEntity
                     .status(HttpStatus.OK)
                     .body(submissionId)
             } else {
-                logger.warn("Uploading file is empty or not .qrs file.")
+                logger.warn("[$submissionId]: Uploading file is empty or not .qrs file.")
 
                 ResponseEntity
                     .status(HttpStatus.UNPROCESSABLE_ENTITY)
                     .body(Requests.EMPTY_FILE.text)
             }
         } catch (e: Exception) {
-            logger.error("Caught exception: $e!")
+            logger.error("[$submissionId]: Caught exception while uploading file: ${e.stackTraceToString()}!")
 
             ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
