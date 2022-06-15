@@ -122,10 +122,9 @@ class SubmissionService {
         Runtime
             .getRuntime()
             .exec(
-                "${TRIKLinux.PATCHER.command} $submissionDir${Paths.TESTS}/$poleFilename " +
+                "${TRIKLinux.PATCHER.command} $submissionDir${Paths.TESTS.text}/$poleFilename " +
                         "$submissionDir${FilePostfixes.TESTING.text}${FilePostfixes.QRS.text}"
             ).waitFor()
-        Thread.sleep(10_000)
     }
 
     private fun execute2DModel(submissionId: Long) {
