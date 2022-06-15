@@ -62,9 +62,13 @@ COPY docker/generate_hash.sh generate_hash.sh
 #WORKDIR /$APP_DIR
 #COPY tasks tasks
 
+# Creating directory for submissions
+WORKDIR /$APP_DIR
+RUN mkdir submissions
+
 #Copying application
 WORKDIR /$APP_DIR
-ARG JAR_FILE=build/libs/trik-testsys-0.1.12.jar
+ARG JAR_FILE=build/libs/trik-testsys-1.0.0.jar
 ARG APP=app.jar
 COPY $JAR_FILE $APP
 
