@@ -3,6 +3,8 @@ package server.controller
 import server.service.SubmissionService
 import server.entity.Submission
 import server.enum.Requests
+import server.enum.Id
+import server.enum.Status
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.io.InputStreamResource
@@ -15,8 +17,6 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileInputStream
 import com.beust.klaxon.JsonObject
-import server.enum.Id
-import server.enum.Status
 
 @RestController
 class SubmissionController {
