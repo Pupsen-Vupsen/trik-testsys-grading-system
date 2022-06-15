@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "Pupsen&Vupsen"
-version = "0.1.12"
+version = "1.0.0"
 java.sourceCompatibility = JavaVersion.VERSION_16
 
 repositories {
@@ -27,7 +27,7 @@ dependencies {
 
     runtimeOnly("com.h2database:h2")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-    implementation("com.beust:klaxon:5.5")
+    implementation("com.beust:klaxon:5.6")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
