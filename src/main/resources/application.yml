@@ -24,9 +24,9 @@ logging:
       max-history: 31                                    # Stores a month of logs
 server:
   ssl:
-    key-store: classpath:keystore/grading-system.p12
-    key-store-type: pkcs12
-    key-alias: grading-system
-    key-store-password: qwerty123456
-    enabled: true
-  port: 8080
+    key-store: classpath:keystore/grading-system.p12    # Path to secured key
+    key-store-type: pkcs12                              # Type of key
+    key-alias: grading-system                           # Key alias
+    key-store-password: qwerty123456                    # Key password
+    enabled: true                                       # Enabling ssl
+  port: 8080                                            # Entrypoint
