@@ -4,5 +4,6 @@ enum class Paths(text: String) {
 
     SUBMISSIONS("submissions/"),
     TASKS("tasks/"),
-    TESTS("tests/")
+    TESTS("tests/"),
+    PIN("pin.txt")
 }
