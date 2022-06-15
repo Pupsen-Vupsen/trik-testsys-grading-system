@@ -24,16 +24,6 @@ class Application {
         return factory.createMultipartConfig()
     }
 
-    @Bean("prepareExecutor")
-    fun createPrepareExecutor(): Executor? {
-        val executor = ThreadPoolTaskExecutor()
-        executor.corePoolSize = 1
-        executor.maxPoolSize = 1
-        executor.setQueueCapacity(1000)
-        executor.initialize()
-        return executor
-    }
-
     @Bean("testExecutor")
     fun createTestExecutor(): Executor? {
         val executor = ThreadPoolTaskExecutor()
