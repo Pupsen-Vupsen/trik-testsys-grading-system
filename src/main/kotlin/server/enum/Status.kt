@@ -1,6 +1,6 @@
 package server.enum
 
-enum class Status(symbol: Char) {
+enum class Status(val symbol: Char) {
 
     RUNNING('?'),
     OK('+'),

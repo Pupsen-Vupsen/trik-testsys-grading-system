@@ -1,6 +1,6 @@
 package server.enum
 
-enum class Paths(text: String) {
+enum class Paths(val text: String) {
 
     SUBMISSIONS("submissions/"),
     TASKS("tasks/"),

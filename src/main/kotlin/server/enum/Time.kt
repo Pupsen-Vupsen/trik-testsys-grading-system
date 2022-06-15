@@ -1,6 +1,6 @@
 package server.enum
 
-enum class Time(value: Long) {
+enum class Time(val value: Long) {
 
      WAITING(10_000L)
 }
