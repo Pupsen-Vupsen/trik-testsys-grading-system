@@ -29,7 +29,11 @@ hs_err_pid*
 .gradle
 build
 
+# Project files
 data
 tasks
 logs
 TRIKStudio
+submissions
+docker
+*.sh
