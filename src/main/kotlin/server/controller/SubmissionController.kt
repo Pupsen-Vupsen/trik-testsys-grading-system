@@ -129,7 +129,7 @@ class SubmissionController {
 
         return try {
             if (fileUploader.upload()) {
-                submissionService.saveSubmission(Submission(submissionId, taskName))
+                submissionService.saveSubmission(Submission(submissionId, returnTaskName(taskName)))
                 submissionService.testSubmission(submissionId)
 
                 logger.info("[$submissionId]: Saved submission.")
@@ -150,5 +150,12 @@ class SubmissionController {
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(e.message)
         }
+    }
+
+    private fun returnTaskName(taskPrefix: String): String {
+        val tasksDir = File(Paths.TASKS.text)
+        return tasksDir.listFiles()!!.find {
+            it.name.startsWith(taskPrefix)
+        }?.name ?: throw Exception("Can't find task, which starts with $taskPrefix.")
     }
 }

@@ -68,7 +68,7 @@ RUN mkdir submissions
 
 #Copying application
 WORKDIR /$APP_DIR
-ARG JAR_FILE=build/libs/trik-testsys-1.0.0.jar
+ARG JAR_FILE=build/libs/trik-testsys-1.0.1.jar
 ARG APP=app.jar
 COPY $JAR_FILE $APP
 
