@@ -71,7 +71,7 @@ class SubmissionController {
                 logger.warn("[$id]: There is no submission with this id.")
                 return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
-                    .body(Requests.SUBMISSION_NOT_FOUND)
+                    .body(Requests.SUBMISSION_NOT_FOUND.text)
             }
 
         val submissionFilePath = Paths.SUBMISSIONS.text + "${submission.id}/submission" + FilePostfixes.QRS.text
@@ -95,7 +95,7 @@ class SubmissionController {
                 logger.warn("[$id]: There is no submission with this id.")
                 return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
-                    .body(Requests.SUBMISSION_NOT_FOUND)
+                    .body(Requests.SUBMISSION_NOT_FOUND.text)
             }
 
         if (submission.status != Status.OK.symbol)
@@ -129,7 +129,7 @@ class SubmissionController {
 
         return try {
             if (fileUploader.upload()) {
-                submissionService.saveSubmission(Submission(submissionId, returnTaskName(taskName)))
+                submissionService.saveSubmission(Submission(submissionId, taskName))
                 submissionService.testSubmission(submissionId)
 
                 logger.info("[$submissionId]: Saved submission.")
@@ -152,10 +152,25 @@ class SubmissionController {
         }
     }
 
-    private fun returnTaskName(taskPrefix: String): String {
-        val tasksDir = File(Paths.TASKS.text)
-        return tasksDir.listFiles()!!.find {
-            it.name.startsWith(taskPrefix)
-        }?.name ?: throw Exception("Can't find task, which starts with $taskPrefix.")
+    @PostMapping("grading-system/submissions/submission/status")
+    fun changeStatus(
+        @RequestParam id: Long,
+        @RequestParam status: Char
+    ): ResponseEntity<Any> {
+        logger.info("[$id]: Client requested changing status to $status.")
+
+        val submission = submissionService.getSubmissionOrNull(id)
+            ?: run {
+                logger.warn("[$id]: There is no submission with this id.")
+                return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(Requests.SUBMISSION_NOT_FOUND.text)
+            }
+
+        submissionService.changeSubmissionStatus(id, status)
+
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body("Changed $id status to $status.")
     }
 }

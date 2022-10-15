@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM --platform=linux/amd64 ubuntu:18.04
 MAINTAINER Roman Shishkin <romashkin.2001@yandex.ru>
 LABEL Description="This image is for grading system for TRIK Studio testing system"
 
@@ -20,12 +20,17 @@ RUN apt-get -y update
 WORKDIR /
 RUN apt-get -y install apt-utils default-jdk wget curl qt5-default
 
+#Installing missing libs
+WORKDIR /
+RUN apt-get -y install libpulse0
+
 #Copying intalling script for master installer
 WORKDIR /$APP_DIR/$INSTALLER_DIR
 COPY docker/trik_studio_installscript.qs install_script.qs
 
 #Downloading TRIK Studio
 WORKDIR /$APP_DIR/$INSTALLER_DIR
+ARG TRIK_STUDIO_VERSION=2022.2
 RUN curl --output $INSTALLER $MASTER_INSTALLER_URL
 
 #Setting installer executable
@@ -33,20 +38,19 @@ WORKDIR /$APP_DIR/$INSTALLER_DIR
 RUN chmod +x $INSTALLER
 
 #Checking installer sha1 sum
-WORKDIR /$APP_DIR/$INSTALLER_DIR
-ARG INSTALLER_SHA1_SUM=c0732c4
-RUN ./$INSTALLER --version | grep -F $INSTALLER_SHA1_SUM
+#WORKDIR /$APP_DIR/$INSTALLER_DIR
+#ARG INSTALLER_SHA1_SUM=c0732c4
+#RUN ./$INSTALLER --version | grep -F $INSTALLER_SHA1_SUM
 
 #Installing TRIKStudio
 WORKDIR /$APP_DIR
 #Command to install master version
-RUN env INSTALL_DIR=/$APP_DIR/$TRIK_STUDIO_DIR ./$INSTALLER_DIR/$INSTALLER --script ./$INSTALLER_DIR/install_script.qs --platform minimal --verbose
+#RUN env INSTALL_DIR=/$APP_DIR/$TRIK_STUDIO_DIR ./$INSTALLER_DIR/$INSTALLER --script ./$INSTALLER_DIR/install_script.qs --platform minimal --verbose
 #Command to install release version
-#RUN ./$INSTALLER --am --al --confirm-command -t /$APP_DIR/$TRIK_STUDIO_DIR install
+RUN ./$INSTALLER_DIR/$INSTALLER --am --al --confirm-command -t /$APP_DIR/$TRIK_STUDIO_DIR install
 
 #Checking TRIK Studio version
 WORKDIR /$APP_DIR/$TRIK_STUDIO_DIR
-ARG TRIK_STUDIO_VERSION=2022.1-7-g3e1af1
 RUN ./trik-studio -platform offscreen --version | grep -F $TRIK_STUDIO_VERSION
 
 #Removing installer and script
@@ -66,9 +70,20 @@ COPY docker/generate_hash.sh generate_hash.sh
 WORKDIR /$APP_DIR
 RUN mkdir submissions
 
+# Setting russian locale
+WORKDIR /
+RUN apt-get install -y locales
+RUN sed -i -e \
+  's/# ru_RU.UTF-8 UTF-8/ru_RU.UTF-8 UTF-8/' /etc/locale.gen \
+   && locale-gen
+ENV LANG ru_RU.UTF-8
+ENV LANGUAGE ru_RU:ru
+ENV LC_LANG ru_RU.UTF-8
+ENV LC_ALL ru_RU.UTF-8
+
 #Copying application
 WORKDIR /$APP_DIR
-ARG JAR_FILE=build/libs/trik-testsys-1.0.1.jar
+ARG JAR_FILE=build/libs/trik-testsys-1.0.9.jar
 ARG APP=app.jar
 COPY $JAR_FILE $APP
 

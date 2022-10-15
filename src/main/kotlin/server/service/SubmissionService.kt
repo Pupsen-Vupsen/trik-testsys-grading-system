@@ -43,6 +43,7 @@ class SubmissionService {
 
     fun saveSubmission(submission: Submission): Long {
         submissionRepository.save(submission)
+        logger.info("[${submission.id}]: Saved to database.")
 
         val countOfTests = prepareForTesting(submission.id)
         submission.countOfTests = countOfTests
@@ -52,19 +53,30 @@ class SubmissionService {
     }
 
     private fun prepareForTesting(id: Long): Int {
+        logger.info("[$id]: Started preparing for testing.")
         val submission = submissionRepository.findSubmissionById(id) ?: throw Exception("WTF?!")
 
-        val taskPath = Paths.TASKS.text + submission.taskName
-        val submissionDir = Paths.SUBMISSIONS.text + "${submission.id}"
-        File(taskPath).copyRecursively(File(submissionDir))
+        val submissionDir = Paths.SUBMISSIONS.text + "${submission.id}/"
+        File(Paths.TASKS.text + findTaskName(submission.taskName)).copyRecursively(File(submissionDir))
         logger.info("[$id]: Copied tests poles and pin.txt.")
 
-        val submissionFilePath = submissionDir + "/submission" + FilePostfixes.QRS.text
-        val testingFilePath = submissionDir + "/testing" + FilePostfixes.QRS.text
+        File(submissionDir + "results/").mkdir()
+        logger.info("[$id]: Created dir for results.")
+
+        val submissionFilePath = submissionDir + "submission" + FilePostfixes.QRS.text
+        val testingFilePath = submissionDir + "testing" + FilePostfixes.QRS.text
         File(submissionFilePath).copyTo(File(testingFilePath))
         logger.info("[$id]: Copied submission for testing.")
 
-        return File(taskPath + "/" + Paths.TESTS.text).listFiles()!!.size
+        return File(Paths.SUBMISSIONS.text + "$id/" + Paths.TESTS.text).listFiles()!!.size
+    }
+
+    private fun findTaskName(taskPrefix: String): String {
+        val tasksDir = File(Paths.TASKS.text)
+        val taskName = tasksDir.listFiles()!!.find {
+            it.name.startsWith(taskPrefix)
+        }?.name ?: throw Exception("Can't find task, which starts with $taskPrefix.")
+        return String(taskName.toByteArray(), charset("utf-8"))
     }
 
     data class TestingResults(val level: String, val message: String)
@@ -72,30 +84,34 @@ class SubmissionService {
     @Async("testExecutor")
     fun testSubmission(id: Long) = testExecutor.execute {
         val submission = submissionRepository.findSubmissionById(id) ?: throw Exception("WTF?!")
+        val submissionDir = Paths.SUBMISSIONS.text + "${submission.id}/"
 
-        val testsDir = Paths.SUBMISSIONS.text + "${submission.id}/" + Paths.TESTS.text
-        val logFilePath = Paths.SUBMISSIONS.text + "${submission.id}/" + FilePostfixes.RESULT.text
+
+        val testsDir = submissionDir + Paths.TESTS.text
+        val resultFilesPath = submissionDir + Paths.RESULTS.text + FilePostfixes.RESULT.text
 
         logger.info("[$id]: Started testing. Count of tests ${submission.countOfTests}.")
         try {
             File(testsDir).listFiles()!!.forEach { poleFile ->
+                val resultFilePath = resultFilesPath + "_" + poleFile.nameWithoutExtension + FilePostfixes.INFO.text
+
                 executePatcher(submission.id, poleFile.name)
-                logger.info("[$id]: Patched with ${poleFile.name}.")
+                logger.info("[$id]: Patched with test ${poleFile.nameWithoutExtension}.")
 
-                execute2DModel(submission.id)
-                logger.info("[$id]: Executed on test ${poleFile.name}.")
+                execute2DModel(submission.id, resultFilePath)
+                logger.info("[$id]: Executed on test ${poleFile.nameWithoutExtension}.")
 
-                val logFile = File(logFilePath)
+                val logFile = File(resultFilePath)
 
                 if (logFile.readBytes().isEmpty()) {
                     submission.deny()
                     logger.warn("[$id]: Cannot generate correct log file.")
-                    logFile.delete()
                 } else {
                     val log = Klaxon().parseArray<TestingResults>(logFile)
-                    if (log == null || log[0].level == "error") {
-                        logger.info("[$id]: Submission failed test ${poleFile.name}.")
+
+                    if (log == null || log.last().level == "error") {
                         submission.deny()
+                        logger.info("[$id]: Submission failed test ${poleFile.name}.")
                     } else {
                         submission.countOfSuccessfulTests++
                         logger.info("[$id]: Submission passed test ${poleFile.name}.")
@@ -115,6 +131,34 @@ class SubmissionService {
             submission.deny()
         }
         submissionRepository.save(submission)
+        deleteTestingFiles(id)
+    }
+
+    fun changeSubmissionStatus(id: Long, newStatus: Char) {
+        val submission = getSubmissionOrNull(id)!!
+
+        if (newStatus == '+') {
+            logger.info("[$id]: Changed status to accepted.")
+            submission.accept()
+
+            logger.info("[$id]: Started generating hash and pin.")
+            generateHashAndPin(submission)
+        } else {
+            logger.info("[$id]: Changed status to denied.")
+            submission.deny()
+        }
+
+        submissionRepository.save(submission)
+    }
+
+    private fun deleteTestingFiles(id: Long) {
+        val submissionDirPath = Paths.SUBMISSIONS.text + "$id/"
+
+        File(submissionDirPath + Paths.TESTS.text).deleteRecursively()
+        logger.info("[$id]: Deleted tests.")
+
+        File(submissionDirPath + FilePostfixes.TESTING.text + FilePostfixes.QRS.text).delete()
+        logger.info("[$id]: Deleted testing file.")
     }
 
     private fun executePatcher(submissionId: Long, poleFilename: String) {
@@ -127,12 +171,12 @@ class SubmissionService {
             ).waitFor()
     }
 
-    private fun execute2DModel(submissionId: Long) {
+    private fun execute2DModel(submissionId: Long, resultPath: String) {
         val submissionDir = Paths.SUBMISSIONS.text + "$submissionId/"
         Runtime
             .getRuntime()
             .exec(
-                "${TRIKLinux.TWO_D_MODEL.command} $submissionDir${FilePostfixes.RESULT.text} " +
+                "${TRIKLinux.TWO_D_MODEL.command} $resultPath " +
                         "$submissionDir${FilePostfixes.TESTING.text}${FilePostfixes.QRS.text}"
             ).waitFor()
     }
@@ -140,6 +184,7 @@ class SubmissionService {
     private fun generateHashAndPin(submission: Submission) {
         val submissionFilePath = Paths.SUBMISSIONS.text + "${submission.id}/submission" + FilePostfixes.QRS.text
         val hashAndPinFilePath = Paths.SUBMISSIONS.text + "${submission.id}/" + FilePostfixes.HASH_PIN_TXT.text
+
         Runtime
             .getRuntime()
             .exec("./generate_hash.sh $submissionFilePath $hashAndPinFilePath")
