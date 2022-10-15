@@ -11,7 +11,8 @@ class Submission(
     val taskName: String
 ) {
 
-    var status = Status.RUNNING.symbol
+    @Enumerated(EnumType.ORDINAL)
+    var status = Status.QUEUED
         private set
 
     var countOfTests: Int? = null
@@ -20,11 +21,15 @@ class Submission(
     var pin: String? = null
     var hash: String? = null
 
-fun accept() {
-        status = Status.OK.symbol
+    fun accept() {
+        changeStatus(Status.ACCEPTED)
     }
 
     fun deny() {
-        status = Status.FAILED.symbol
+        changeStatus(Status.FAILED)
+    }
+
+    fun changeStatus(status: Status) {
+        this.status = status
     }
 }

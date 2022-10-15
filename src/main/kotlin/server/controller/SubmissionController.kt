@@ -140,7 +140,7 @@ class SubmissionController {
                     .body(thereIsNoSubmissionJson)
             }
 
-        if (submission.status != Status.OK.symbol)
+        if (submission.status != Status.ACCEPTED)
             return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(submissionIsNotSuccessfulJson)
