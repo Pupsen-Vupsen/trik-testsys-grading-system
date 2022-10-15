@@ -166,7 +166,7 @@ class SubmissionService {
         Runtime
             .getRuntime()
             .exec(
-                "${TRIKLinux.PATCHER.command} $submissionDir${Paths.TESTS.text}/$poleFilename " +
+                "${TRIKCommands.PATCHER.command} $submissionDir${Paths.TESTS.text}/$poleFilename " +
                         "$submissionDir${FilePostfixes.TESTING.text}${FilePostfixes.QRS.text}"
             ).waitFor()
     }
@@ -176,7 +176,7 @@ class SubmissionService {
         Runtime
             .getRuntime()
             .exec(
-                "${TRIKLinux.TWO_D_MODEL.command} $resultPath " +
+                "${TRIKCommands.TWO_D_MODEL.command} $resultPath " +
                         "$submissionDir${FilePostfixes.TESTING.text}${FilePostfixes.QRS.text}"
             ).waitFor()
     }
