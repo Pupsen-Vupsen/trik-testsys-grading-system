@@ -1,8 +1,5 @@
 package server.enum
 
-enum class Status(val symbol: Char) {
-
-    RUNNING('?'),
-    OK('+'),
-    FAILED('-')
+enum class Status {
+    QUEUED, ON_TESTING, SUCCESSFUL, FAILED, ERROR
 }
