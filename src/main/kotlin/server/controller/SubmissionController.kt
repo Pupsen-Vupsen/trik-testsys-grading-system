@@ -1,5 +1,6 @@
 package server.controller
 
+import com.beust.klaxon.JsonArray
 import server.service.SubmissionService
 import server.entity.Submission
 import server.enum.*
@@ -23,29 +24,62 @@ class SubmissionController {
 
     val logger: Logger = LoggerFactory.getLogger(SubmissionController::class.java)
 
+    private val thereIsNoSubmissionJson = JsonObject(
+        mapOf(
+            "code" to 404,
+            "error_type" to "client",
+            "message" to "There is no submission with this id."
+        )
+    )
+
+    private val submissionIsNotSuccessfulJson = JsonObject(
+        mapOf(
+            "code" to 400,
+            "error_type" to "client",
+            "message" to "Submission is not successful."
+        )
+    )
+
+    private val serverErrorJson = JsonObject(
+        mapOf(
+            "code" to 500,
+            "error_type" to "server",
+            "message" to "Something on server went wrong."
+        )
+    )
+
+    private val uploadingFileEmptyJson = JsonObject(
+        mapOf(
+            "code" to 400,
+            "error_type" to "client",
+            "message" to "Uploading file is empty."
+        )
+    )
+
     @Autowired
     private lateinit var submissionService: SubmissionService
 
     @GetMapping("grading-system/submissions")
-    fun getAllSubmissions(): ResponseEntity<Any> {
+    fun getAllSubmissions(): ResponseEntity<JsonArray<Any>> {
         logger.info("Client requested all submissions.")
 
         val submissions = submissionService.getAllSubmissionsOrNull()
             ?: run {
                 logger.warn("There are no submissions.")
+
                 return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body(Requests.NO_SUBMISSIONS.text)
+                    .status(HttpStatus.OK)
+                    .body(JsonArray(emptyList()))
             }
 
         logger.info("Returned all submissions.")
         return ResponseEntity
             .status(HttpStatus.OK)
-            .body(submissions)
+            .body(JsonArray(submissions))
     }
 
     @GetMapping("grading-system/submissions/submission/status")
-    fun getSubmissionStatus(@RequestParam id: Long): ResponseEntity<String> {
+    fun getSubmissionStatus(@RequestParam id: Long): ResponseEntity<JsonObject> {
         logger.info("[$id]: Client requested submission status.")
 
         val submission = submissionService.getSubmissionOrNull(id)
@@ -53,13 +87,20 @@ class SubmissionController {
                 logger.warn("[$id]: There is no submission with this id.")
                 return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
-                    .body(Requests.SUBMISSION_NOT_FOUND.text)
+                    .body(thereIsNoSubmissionJson)
             }
 
         logger.info("[$id]: Returned submission status.")
+
+        val submissionStatusJson = JsonObject(
+            mapOf(
+                "id" to submission.id,
+                "status" to submission.status
+            )
+        )
         return ResponseEntity
             .status(HttpStatus.OK)
-            .body(submission.status.toString())
+            .body(submissionStatusJson)
     }
 
     @GetMapping("grading-system/submissions/submission/download")
@@ -71,7 +112,7 @@ class SubmissionController {
                 logger.warn("[$id]: There is no submission with this id.")
                 return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
-                    .body(Requests.SUBMISSION_NOT_FOUND.text)
+                    .body(thereIsNoSubmissionJson)
             }
 
         val submissionFilePath = Paths.SUBMISSIONS.text + "${submission.id}/submission" + FilePostfixes.QRS.text
@@ -80,7 +121,7 @@ class SubmissionController {
             InputStreamResource(FileInputStream(File(submissionFilePath)))
         } catch (e: Exception) {
             logger.error("[$id]: Caught exception while returning file: ${e.stackTraceToString()}!")
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.toString())
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(serverErrorJson)
         }
 
         logger.info("[$id]: Returned submission file.")
@@ -88,20 +129,21 @@ class SubmissionController {
     }
 
     @GetMapping("grading-system/submissions/submission/lectorium_info")
-    fun getHashAndPin(@RequestParam id: Long): ResponseEntity<Any> {
+    fun getHashAndPin(@RequestParam id: Long): ResponseEntity<JsonObject> {
         logger.info("[$id]: Client requested submission hash and pin.")
+
         val submission = submissionService.getSubmissionOrNull(id)
             ?: run {
                 logger.warn("[$id]: There is no submission with this id.")
                 return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
-                    .body(Requests.SUBMISSION_NOT_FOUND.text)
+                    .body(thereIsNoSubmissionJson)
             }
 
         if (submission.status != Status.OK.symbol)
             return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body("Submission isn't successful.")
+                .body(submissionIsNotSuccessfulJson)
 
         val json = JsonObject(mapOf("hash" to submission.hash, "pin" to submission.pin))
 
@@ -117,7 +159,7 @@ class SubmissionController {
     fun postSubmission(
         @RequestParam("task_name") taskName: String,
         @RequestParam file: MultipartFile
-    ): ResponseEntity<Any> {
+    ): ResponseEntity<JsonObject> {
         logger.info("Got file!")
 
         if (submissionId == Id.DEFAULT.value)
@@ -133,44 +175,29 @@ class SubmissionController {
                 submissionService.testSubmission(submissionId)
 
                 logger.info("[$submissionId]: Saved submission.")
+
+                val submissionJson = JsonObject(
+                    mapOf(
+                        "id" to submissionId,
+                        "task_name" to taskName
+                    )
+                )
                 ResponseEntity
                     .status(HttpStatus.OK)
-                    .body(submissionId)
+                    .body(submissionJson)
             } else {
                 logger.warn("[$submissionId]: Uploading file is empty or not .qrs file.")
 
                 ResponseEntity
                     .status(HttpStatus.UNPROCESSABLE_ENTITY)
-                    .body(Requests.EMPTY_FILE.text)
+                    .body(uploadingFileEmptyJson)
             }
         } catch (e: Exception) {
             logger.error("[$submissionId]: Caught exception while uploading file: ${e.stackTraceToString()}!")
 
             ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(e.message)
+                .body(serverErrorJson)
         }
-    }
-
-    @PostMapping("grading-system/submissions/submission/status")
-    fun changeStatus(
-        @RequestParam id: Long,
-        @RequestParam status: Char
-    ): ResponseEntity<Any> {
-        logger.info("[$id]: Client requested changing status to $status.")
-
-        val submission = submissionService.getSubmissionOrNull(id)
-            ?: run {
-                logger.warn("[$id]: There is no submission with this id.")
-                return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body(Requests.SUBMISSION_NOT_FOUND.text)
-            }
-
-        submissionService.changeSubmissionStatus(id, status)
-
-        return ResponseEntity
-            .status(HttpStatus.OK)
-            .body("Changed $id status to $status.")
     }
 }
