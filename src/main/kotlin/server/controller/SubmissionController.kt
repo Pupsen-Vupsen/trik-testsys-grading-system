@@ -171,8 +171,8 @@ class SubmissionController {
 
         return try {
             if (fileUploader.upload()) {
-                submissionService.saveSubmission(Submission(submissionId, taskName))
-                submissionService.testSubmission(submissionId)
+                val submission = submissionService.saveSubmission(Submission(submissionId, taskName))
+                submissionService.testSubmission(submission)
 
                 logger.info("[$submissionId]: Saved submission.")
 
