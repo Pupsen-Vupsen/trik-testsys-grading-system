@@ -55,7 +55,8 @@ class Submission(
                 "status" to status,
                 "count_of_tests" to countOfTests,
                 "count_of_successful_tests" to countOfSuccessfulTests,
-                "hash" to hash
+                "hash" to hash,
+                "trik_message" to trikMessage
             )
         )
     }

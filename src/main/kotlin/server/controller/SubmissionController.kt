@@ -110,6 +110,25 @@ class SubmissionController {
             .body(submissionStatusJson)
     }
 
+    @GetMapping("/submission/info")
+    fun getSubmissionInfo(@RequestParam id: Long): ResponseEntity<JsonObject> {
+        logger.info("[$id]: Client requested submission info.")
+
+        val submission = submissionService.getSubmissionOrNull(id)
+            ?: run {
+                logger.warn("[$id]: There is no submission with this id.")
+                return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(thereIsNoSubmissionJson)
+            }
+
+
+        logger.info("[$id]: Returned submission info.")
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(submission.toJsonObject())
+    }
+
     @GetMapping("/submission/download")
     fun getSubmissionFile(@RequestParam id: Long): ResponseEntity<Any> {
         logger.info("[$id]: Client requested submission file.")
