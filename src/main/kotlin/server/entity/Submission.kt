@@ -11,11 +11,14 @@ import javax.persistence.*
 @Entity
 @Table(name = "SUBMISSIONS")
 class Submission(
-    @Id val id: Long,
     @Name("task_name") val taskName: String,
     @Name("student_id") val studentId: String,
     val date: String
 ) {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "submission_id_generator")
+    val id: Long? = null
 
     var status = Status.QUEUED
         private set

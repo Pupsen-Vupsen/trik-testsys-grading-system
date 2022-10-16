@@ -199,8 +199,6 @@ class SubmissionController {
 
     }
 
-    private var submissionId = Id.DEFAULT.value
-
     @PostMapping("/submission/upload")
     fun postSubmission(
         @RequestParam("task_name") taskName: String,
@@ -212,23 +210,20 @@ class SubmissionController {
                 "-" +
                 LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
 
-        if (submissionId == Id.DEFAULT.value)
-            submissionId = submissionService.getLastSubmissionIdOrNull() ?: Id.FIRST.value
-        val id = ++submissionId
-
-        logger.info("[$id]: Set id to new file.")
+        val submission = submissionService.saveSubmission(Submission(taskName, studentId, date))
+        val submissionId = submission.id!!
         val fileUploader = FileUploader(file, submissionId)
-
         return try {
             if (fileUploader.upload()) {
-                val submission = submissionService.saveSubmission(Submission(id, taskName, studentId, date))
+                logger.info("[${submissionId}]: Set id to new file.")
+                submissionService.prepareForTesting(submission)
                 submissionService.testSubmission(submission)
 
-                logger.info("[$id]: Saved submission.")
+                logger.info("[${submissionId}]: Saved submission.")
 
                 val submissionJson = JsonObject(
                     mapOf(
-                        "id" to id,
+                        "id" to submissionId,
                         "status" to submission.status,
                         "student_id" to submission.studentId,
                         "task_name" to taskName,
@@ -239,14 +234,14 @@ class SubmissionController {
                     .status(HttpStatus.OK)
                     .body(submissionJson)
             } else {
-                logger.warn("[$id]: Uploading file is empty or not .qrs file.")
+                logger.warn("[$submissionId]: Uploading file is empty or not .qrs file.")
 
                 ResponseEntity
                     .status(HttpStatus.UNPROCESSABLE_ENTITY)
                     .body(uploadingFileEmptyOrNotQrsJson)
             }
         } catch (e: Exception) {
-            logger.error("[$id]: Caught exception while uploading file: ${e.stackTraceToString()}!")
+            logger.error("[${submissionId}]: Caught exception while uploading file: ${e.stackTraceToString()}!")
 
             ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
