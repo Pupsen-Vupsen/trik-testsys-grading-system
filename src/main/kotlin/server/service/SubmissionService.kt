@@ -44,6 +44,7 @@ class SubmissionService {
     }
 
     fun saveSubmission(submission: Submission): Submission {
+        submission.changeStatus(Status.QUEUED)
         submissionRepository.save(submission)
         logger.info("[${submission.id}]: Saved to database.")
 
@@ -53,7 +54,6 @@ class SubmissionService {
         } catch (e: Exception) {
             logger.error("[${submission.id}]: Error while preparing for testing: ${e.message}")
             submission.changeStatus(Status.ERROR)
-            return submission
         }
 
         submissionRepository.save(submission)
@@ -67,7 +67,7 @@ class SubmissionService {
         val submissionDir = Paths.SUBMISSIONS.text + "${submission.id}/"
 
         try {
-            File(Paths.TASKS.text + findTaskName(submission.taskName)).copyRecursively(File(submissionDir))
+            File(Paths.TASKS.text + findTaskName(submission.taskName)).copyRecursively(File(submissionDir), true)
         } catch (e: Exception) {
             logger.error("[$submissionId]: Error while copying task files. Can't find task starts with name ${submission.taskName}: ${e.message}")
             submission.changeStatus(Status.ERROR)
@@ -146,7 +146,7 @@ class SubmissionService {
                     }
 
                     var message = "{ "
-                    log.forEach{
+                    log.forEach {
                         message += "\"" + it.level + "\":" + "\"" + it.message + "\","
                     }
                     message = message.dropLast(1) + "},"

@@ -57,7 +57,7 @@ class SubmissionController {
         val submissionsStatuses = mutableMapOf<Long, String?>()
 
         idArray.forEach {
-            val submission = submissionService.getSubmissionOrNull(it)?: run {
+            val submission = submissionService.getSubmissionOrNull(it) ?: run {
                 logger.warn("There is no submission with id $it.")
                 submissionsStatuses[it] = null
                 return@forEach
@@ -190,6 +190,44 @@ class SubmissionController {
         }
     }
 
+    @PatchMapping("/submission/recheck")
+    fun recheckSubmission(@RequestParam id: Long): ResponseEntity<JsonObject> {
+        logger.info("[$id]: Client requested recheck submission.")
+
+        val submission = submissionService.getSubmissionOrNull(id)
+            ?: run {
+                logger.warn("[$id]: There is no submission with this id.")
+                return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(thereIsNoSubmissionJson)
+            }
+
+        if (submission.status == Status.ACCEPTED) {
+            logger.warn("[$id]: Submission is already accepted.")
+            return ResponseEntity
+                .status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(submissionAlreadyAcceptedJson)
+        }
+
+        submissionService.saveSubmission(submission)
+        submissionService.testSubmission(submission)
+
+        logger.info("[$id]: Saved rechecking submission.")
+
+        val submissionJson = JsonObject(
+            mapOf(
+                "id" to submission.id,
+                "status" to submission.status,
+                "student_id" to submission.studentId,
+                "task_name" to submission.taskName,
+                "date" to submission.date
+            )
+        )
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(submissionJson)
+    }
+
     private val thereIsNoSubmissionJson = JsonObject(
         mapOf(
             "code" to 404,
@@ -211,6 +249,14 @@ class SubmissionController {
             "code" to 400,
             "error_type" to "client",
             "message" to "Uploading file is empty or not .qrs."
+        )
+    )
+
+    private val submissionAlreadyAcceptedJson = JsonObject(
+        mapOf(
+            "code" to 422,
+            "error_type" to "client",
+            "message" to "Submission is already accepted."
         )
     )
 }
