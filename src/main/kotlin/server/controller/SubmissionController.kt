@@ -22,6 +22,7 @@ import com.beust.klaxon.JsonArray
 import com.beust.klaxon.JsonObject
 import java.time.LocalDate
 
+@RequestMapping("/v2/grading-system/submissions")
 @RestController
 class SubmissionController {
 
@@ -30,7 +31,7 @@ class SubmissionController {
     @Autowired
     private lateinit var submissionService: SubmissionService
 
-    @GetMapping("grading-system/submissions")
+    @GetMapping("/all")
     fun getAllSubmissions(): ResponseEntity<JsonArray<Any>> {
         logger.info("Client requested all submissions.")
 
@@ -49,7 +50,7 @@ class SubmissionController {
             .body(JsonArray(submissions))
     }
 
-    @GetMapping("grading-system/submissions/submission/status")
+    @GetMapping("/submission/status")
     fun getSubmissionStatus(@RequestParam id: Long): ResponseEntity<JsonObject> {
         logger.info("[$id]: Client requested submission status.")
 
@@ -74,7 +75,7 @@ class SubmissionController {
             .body(submissionStatusJson)
     }
 
-    @GetMapping("grading-system/submissions/submission/download")
+    @GetMapping("/submission/download")
     fun getSubmissionFile(@RequestParam id: Long): ResponseEntity<Any> {
         logger.info("[$id]: Client requested submission file.")
 
@@ -99,36 +100,12 @@ class SubmissionController {
         return ResponseEntity.status(HttpStatus.OK).body(stream)
     }
 
-    @GetMapping("grading-system/submissions/submission/lectorium_info")
-    fun getHashAndPin(@RequestParam id: Long): ResponseEntity<JsonObject> {
-        logger.info("[$id]: Client requested submission hash and pin.")
-
-        val submission = submissionService.getSubmissionOrNull(id)
-            ?: run {
-                logger.warn("[$id]: There is no submission with this id.")
-                return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body(thereIsNoSubmissionJson)
-            }
-
-        if (submission.status != Status.ACCEPTED)
-            return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(submissionIsNotSuccessfulJson)
-
-        val json = JsonObject(mapOf("hash" to submission.hash, "pin" to submission.pin))
-
-        logger.info("[$id]: Returned submission hash and pin.")
-        return ResponseEntity
-            .status(HttpStatus.OK)
-            .body(json)
-    }
-
     private var submissionId = Id.DEFAULT.value
 
-    @PostMapping("grading-system/submissions/submission/upload")
+    @PostMapping("/submission/upload")
     fun postSubmission(
         @RequestParam("task_name") taskName: String,
+        @RequestParam("student_id") studentId: String,
         @RequestParam file: MultipartFile
     ): ResponseEntity<JsonObject> {
         logger.info("Got file!")
@@ -145,7 +122,7 @@ class SubmissionController {
 
         return try {
             if (fileUploader.upload()) {
-                val submission = submissionService.saveSubmission(Submission(submissionId, taskName, date))
+                val submission = submissionService.saveSubmission(Submission(submissionId, taskName, studentId, date))
                 submissionService.testSubmission(submission)
 
                 logger.info("[$submissionId]: Saved submission.")
@@ -153,6 +130,8 @@ class SubmissionController {
                 val submissionJson = JsonObject(
                     mapOf(
                         "id" to submissionId,
+                        "status" to submission.status,
+                        "student_id" to submission.studentId,
                         "task_name" to taskName,
                         "date" to date
                     )
@@ -165,7 +144,7 @@ class SubmissionController {
 
                 ResponseEntity
                     .status(HttpStatus.UNPROCESSABLE_ENTITY)
-                    .body(uploadingFileEmptyJson)
+                    .body(uploadingFileEmptyOrNotQrsJson)
             }
         } catch (e: Exception) {
             logger.error("[$submissionId]: Caught exception while uploading file: ${e.stackTraceToString()}!")
@@ -184,14 +163,6 @@ class SubmissionController {
         )
     )
 
-    private val submissionIsNotSuccessfulJson = JsonObject(
-        mapOf(
-            "code" to 400,
-            "error_type" to "client",
-            "message" to "Submission is not successful."
-        )
-    )
-
     private val serverErrorJson = JsonObject(
         mapOf(
             "code" to 500,
@@ -200,11 +171,11 @@ class SubmissionController {
         )
     )
 
-    private val uploadingFileEmptyJson = JsonObject(
+    private val uploadingFileEmptyOrNotQrsJson = JsonObject(
         mapOf(
             "code" to 400,
             "error_type" to "client",
-            "message" to "Uploading file is empty."
+            "message" to "Uploading file is empty or not .qrs."
         )
     )
 }
