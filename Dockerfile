@@ -24,6 +24,17 @@ RUN apt-get -y install apt-utils default-jdk wget curl qt5-default
 WORKDIR /
 RUN apt-get -y install libpulse0
 
+# Setting russian locale
+WORKDIR /
+RUN apt-get install -y locales
+RUN sed -i -e \
+  's/# ru_RU.UTF-8 UTF-8/ru_RU.UTF-8 UTF-8/' /etc/locale.gen \
+   && locale-gen
+ENV LANG ru_RU.UTF-8
+ENV LANGUAGE ru_RU:ru
+ENV LC_LANG ru_RU.UTF-8
+ENV LC_ALL ru_RU.UTF-8
+
 #Copying intalling script for master installer
 WORKDIR /$APP_DIR/$INSTALLER_DIR
 COPY docker/trik_studio_installscript.qs install_script.qs
@@ -64,17 +75,6 @@ RUN rm -r $INSTALLER_DIR
 # Creating directory for submissions
 WORKDIR /$APP_DIR
 RUN mkdir submissions
-
-# Setting russian locale
-WORKDIR /
-RUN apt-get install -y locales
-RUN sed -i -e \
-  's/# ru_RU.UTF-8 UTF-8/ru_RU.UTF-8 UTF-8/' /etc/locale.gen \
-   && locale-gen
-ENV LANG ru_RU.UTF-8
-ENV LANGUAGE ru_RU:ru
-ENV LC_LANG ru_RU.UTF-8
-ENV LC_ALL ru_RU.UTF-8
 
 #Copying application
 WORKDIR /$APP_DIR
