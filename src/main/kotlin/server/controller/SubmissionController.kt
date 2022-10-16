@@ -32,22 +32,25 @@ class SubmissionController {
     private lateinit var submissionService: SubmissionService
 
     @GetMapping("/info/all")
-    fun getAllSubmissions(): ResponseEntity<JsonArray<Any>> {
+    fun getAllSubmissions(): ResponseEntity<JsonArray<JsonObject>> {
         logger.info("Client requested all submissions.")
 
-        val submissions = submissionService.getAllSubmissionsOrNull()
+        val submissionsJson = JsonArray<JsonObject>()
+        submissionService.getAllSubmissionsOrNull()?.forEach {
+            submissionsJson.add(it.toJsonObject())
+        }
             ?: run {
                 logger.warn("There are no submissions.")
 
                 return ResponseEntity
                     .status(HttpStatus.OK)
-                    .body(JsonArray(emptyList()))
+                    .body(submissionsJson)
             }
 
         logger.info("Returned all submissions.")
         return ResponseEntity
             .status(HttpStatus.OK)
-            .body(JsonArray(submissions))
+            .body(submissionsJson)
     }
 
     @GetMapping("/status")
