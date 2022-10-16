@@ -1,6 +1,5 @@
 package server.controller
 
-import com.beust.klaxon.JsonArray
 import server.service.SubmissionService
 import server.entity.Submission
 import server.enum.*
@@ -16,45 +15,17 @@ import org.slf4j.LoggerFactory
 
 import java.io.File
 import java.io.FileInputStream
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
+import com.beust.klaxon.JsonArray
 import com.beust.klaxon.JsonObject
+import java.time.LocalDate
 
 @RestController
 class SubmissionController {
 
     val logger: Logger = LoggerFactory.getLogger(SubmissionController::class.java)
-
-    private val thereIsNoSubmissionJson = JsonObject(
-        mapOf(
-            "code" to 404,
-            "error_type" to "client",
-            "message" to "There is no submission with this id."
-        )
-    )
-
-    private val submissionIsNotSuccessfulJson = JsonObject(
-        mapOf(
-            "code" to 400,
-            "error_type" to "client",
-            "message" to "Submission is not successful."
-        )
-    )
-
-    private val serverErrorJson = JsonObject(
-        mapOf(
-            "code" to 500,
-            "error_type" to "server",
-            "message" to "Something on server went wrong."
-        )
-    )
-
-    private val uploadingFileEmptyJson = JsonObject(
-        mapOf(
-            "code" to 400,
-            "error_type" to "client",
-            "message" to "Uploading file is empty."
-        )
-    )
 
     @Autowired
     private lateinit var submissionService: SubmissionService
@@ -161,6 +132,9 @@ class SubmissionController {
         @RequestParam file: MultipartFile
     ): ResponseEntity<JsonObject> {
         logger.info("Got file!")
+        val date = LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) +
+                "-" +
+                LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
 
         if (submissionId == Id.DEFAULT.value)
             submissionId = submissionService.getLastSubmissionIdOrNull() ?: Id.FIRST.value
@@ -171,7 +145,7 @@ class SubmissionController {
 
         return try {
             if (fileUploader.upload()) {
-                val submission = submissionService.saveSubmission(Submission(submissionId, taskName))
+                val submission = submissionService.saveSubmission(Submission(submissionId, taskName, date))
                 submissionService.testSubmission(submission)
 
                 logger.info("[$submissionId]: Saved submission.")
@@ -179,7 +153,8 @@ class SubmissionController {
                 val submissionJson = JsonObject(
                     mapOf(
                         "id" to submissionId,
-                        "task_name" to taskName
+                        "task_name" to taskName,
+                        "date" to date
                     )
                 )
                 ResponseEntity
@@ -200,4 +175,36 @@ class SubmissionController {
                 .body(serverErrorJson)
         }
     }
+
+    private val thereIsNoSubmissionJson = JsonObject(
+        mapOf(
+            "code" to 404,
+            "error_type" to "client",
+            "message" to "There is no submission with this id."
+        )
+    )
+
+    private val submissionIsNotSuccessfulJson = JsonObject(
+        mapOf(
+            "code" to 400,
+            "error_type" to "client",
+            "message" to "Submission is not successful."
+        )
+    )
+
+    private val serverErrorJson = JsonObject(
+        mapOf(
+            "code" to 500,
+            "error_type" to "server",
+            "message" to "Something on server went wrong."
+        )
+    )
+
+    private val uploadingFileEmptyJson = JsonObject(
+        mapOf(
+            "code" to 400,
+            "error_type" to "client",
+            "message" to "Uploading file is empty."
+        )
+    )
 }

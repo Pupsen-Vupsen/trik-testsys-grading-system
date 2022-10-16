@@ -1,6 +1,7 @@
 package server.entity
 
 import server.enum.Status
+import server.service.StatusConverter
 
 import javax.persistence.*
 
@@ -8,10 +9,11 @@ import javax.persistence.*
 @Table(name = "SUBMISSIONS")
 class Submission(
     @Id val id: Long,
-    val taskName: String
+    val taskName: String,
+    val date: String
 ) {
 
-    @Enumerated(EnumType.ORDINAL)
+    @Convert(converter = StatusConverter::class)
     var status = Status.QUEUED
         private set
 
