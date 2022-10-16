@@ -17,10 +17,10 @@ import java.io.File
 import java.io.FileInputStream
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import java.time.LocalDate
 
 import com.beust.klaxon.JsonArray
 import com.beust.klaxon.JsonObject
-import java.time.LocalDate
 
 @RequestMapping("/v2/grading-system/submissions")
 @RestController
@@ -48,6 +48,41 @@ class SubmissionController {
         return ResponseEntity
             .status(HttpStatus.OK)
             .body(JsonArray(submissions))
+    }
+
+    @GetMapping("/status")
+    fun getArraySubmissionsStatus(@RequestParam("id_array") idArray: List<Long>): ResponseEntity<JsonArray<Any>> {
+        logger.info("Client requested submissions statuses.")
+
+        val submissionsStatuses = mutableMapOf<Long, String?>()
+
+        idArray.forEach {
+            val submission = submissionService.getSubmissionOrNull(it)?: run {
+                logger.warn("There is no submission with id $it.")
+                submissionsStatuses[it] = null
+                return@forEach
+            }
+
+            submissionsStatuses[it] = submission.status.name
+        }
+
+        logger.info("Returned submissions statuses.")
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(convertFromMutableMapToJsonArray(submissionsStatuses))
+    }
+
+    private fun convertFromMutableMapToJsonArray(map: MutableMap<Long, String?>): JsonArray<Any> {
+        val jsonArray = JsonArray<Any>()
+
+        map.forEach {
+            val jsonObject = JsonObject()
+            jsonObject["id"] = it.key
+            jsonObject["status"] = it.value
+            jsonArray.add(jsonObject)
+        }
+
+        return jsonArray
     }
 
     @GetMapping("/submission/status")
