@@ -30,7 +30,7 @@ class Application {
         val executor = ThreadPoolTaskExecutor()
         executor.corePoolSize = 6
         executor.maxPoolSize = 6
-        executor.setQueueCapacity(1000)
+        executor.setQueueCapacity(5000)
         executor.initialize()
         return executor
     }
