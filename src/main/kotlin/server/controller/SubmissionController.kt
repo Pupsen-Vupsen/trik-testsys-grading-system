@@ -31,7 +31,7 @@ class SubmissionController {
     @Autowired
     private lateinit var submissionService: SubmissionService
 
-    @GetMapping("/all")
+    @GetMapping("/info/all")
     fun getAllSubmissions(): ResponseEntity<JsonArray<Any>> {
         logger.info("Client requested all submissions.")
 
@@ -128,6 +128,42 @@ class SubmissionController {
             .status(HttpStatus.OK)
             .body(submission.toJsonObject())
     }
+
+    @GetMapping("/info")
+    fun getArraySubmissionsInfo(@RequestParam("id_array") idArray: List<Long>): ResponseEntity<JsonArray<JsonObject>> {
+        logger.info("Client requested submissions info.")
+
+        val submissionsInfo = JsonArray<JsonObject>()
+
+        idArray.forEach {
+            val submission = submissionService.getSubmissionOrNull(it) ?: run {
+                logger.warn("There is no submission with id $it.")
+                submissionsInfo.add(returnEmptySubmission(it))
+                return@forEach
+            }
+
+            submissionsInfo.add(submission.toJsonObject())
+        }
+
+        logger.info("Returned submissions info.")
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(submissionsInfo)
+    }
+
+    private fun returnEmptySubmission(id: Long) = JsonObject(
+        mapOf(
+            "id" to id,
+            "task_name" to null,
+            "student_id" to null,
+            "date" to null,
+            "status" to null,
+            "count_of_tests" to null,
+            "count_of_successful_tests" to null,
+            "hash" to null,
+            "trik_message" to null
+        )
+    )
 
     @GetMapping("/submission/download")
     fun getSubmissionFile(@RequestParam id: Long): ResponseEntity<Any> {
