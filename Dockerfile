@@ -42,7 +42,7 @@ COPY docker/trik_studio_installscript.qs install_script.qs
 #Downloading TRIK Studio
 WORKDIR /$APP_DIR/$INSTALLER_DIR
 ARG TRIK_STUDIO_VERSION=2022.2
-RUN curl --output $INSTALLER $MASTER_INSTALLER_URL
+RUN curl --output $INSTALLER $RELEASE_INSTALLER_URL
 
 #Setting installer executable
 WORKDIR /$APP_DIR/$INSTALLER_DIR
@@ -56,9 +56,9 @@ RUN chmod +x $INSTALLER
 #Installing TRIKStudio
 WORKDIR /$APP_DIR
 #Command to install master version
-#RUN env INSTALL_DIR=/$APP_DIR/$TRIK_STUDIO_DIR ./$INSTALLER_DIR/$INSTALLER --script ./$INSTALLER_DIR/install_script.qs --platform minimal --verbose
+RUN env INSTALL_DIR=/$APP_DIR/$TRIK_STUDIO_DIR ./$INSTALLER_DIR/$INSTALLER --script ./$INSTALLER_DIR/install_script.qs --platform minimal --verbose
 #Command to install release version
-RUN ./$INSTALLER_DIR/$INSTALLER --am --al --confirm-command -t /$APP_DIR/$TRIK_STUDIO_DIR install
+#RUN ./$INSTALLER_DIR/$INSTALLER --am --al --confirm-command -t /$APP_DIR/$TRIK_STUDIO_DIR install
 
 #Checking TRIK Studio version
 WORKDIR /$APP_DIR/$TRIK_STUDIO_DIR
@@ -69,12 +69,12 @@ WORKDIR /$APP_DIR
 RUN rm -r $INSTALLER_DIR
 
 ##Copying tasks (only for testing container)
-#WORKDIR /$APP_DIR
+#WORKDIR /
 #COPY tasks tasks
 
-# Creating directory for submissions
-WORKDIR /$APP_DIR
-RUN mkdir submissions
+##Creating directory for submissions
+#WORKDIR /
+#RUN mkdir submissions
 
 #Copying application
 WORKDIR /$APP_DIR
