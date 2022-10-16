@@ -199,7 +199,7 @@ class SubmissionController {
     fun postSubmission(
         @RequestParam("task_name") taskName: String,
         @RequestParam("student_id") studentId: String,
-        @RequestParam file: MultipartFile
+        @RequestBody file: MultipartFile
     ): ResponseEntity<JsonObject> {
         logger.info("Got file!")
         val date = LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) +
