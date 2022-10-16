@@ -109,7 +109,7 @@ class SubmissionService {
         val resultFilesPath = submissionDir + Paths.RESULTS.text + FilePostfixes.RESULT.text
 
         logger.info("[$submissionId]: Started testing. Count of tests ${submission.countOfTests}.")
-        submission.changeStatus(Status.ON_TESTING)
+        submission.changeStatus(Status.RUNNING)
         var trikMessage = "[ "
         try {
             File(testsDir).listFiles()?.forEach { poleFile ->

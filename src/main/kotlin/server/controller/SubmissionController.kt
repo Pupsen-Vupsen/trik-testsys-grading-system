@@ -271,7 +271,7 @@ class SubmissionController {
             return ResponseEntity
                 .status(HttpStatus.UNPROCESSABLE_ENTITY)
                 .body(submissionAlreadyAcceptedJson)
-        } else if (submission.status == Status.QUEUED || submission.status == Status.ON_TESTING) {
+        } else if (submission.status == Status.QUEUED || submission.status == Status.RUNNING) {
             logger.warn("[$id]: Submission is queued or testing.")
             return ResponseEntity
                 .status(HttpStatus.METHOD_NOT_ALLOWED)
