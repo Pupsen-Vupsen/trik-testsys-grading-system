@@ -57,11 +57,6 @@ RUN ./trik-studio -platform offscreen --version | grep -F $TRIK_STUDIO_VERSION
 WORKDIR /$APP_DIR
 RUN rm -r $INSTALLER_DIR
 
-#Copying scripts
-WORKDIR /$APP_DIR
-COPY docker/echo_pin.sh echo_pin.sh
-COPY docker/generate_hash.sh generate_hash.sh
-
 ##Copying tasks (only for testing container)
 #WORKDIR /$APP_DIR
 #COPY tasks tasks
@@ -83,7 +78,7 @@ ENV LC_ALL ru_RU.UTF-8
 
 #Copying application
 WORKDIR /$APP_DIR
-ARG JAR_FILE=build/libs/trik-testsys-1.0.9.jar
+ARG JAR_FILE=build/libs/trik-testsys-2.0.0.jar
 ARG APP=app.jar
 COPY $JAR_FILE $APP
 
