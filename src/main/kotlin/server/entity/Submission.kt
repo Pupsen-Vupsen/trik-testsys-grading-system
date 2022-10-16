@@ -5,7 +5,6 @@ import com.beust.klaxon.JsonObject
 import org.springframework.boot.context.properties.bind.Name
 
 import server.enum.Status
-import server.service.StatusConverter
 
 import javax.persistence.*
 
@@ -18,7 +17,6 @@ class Submission(
     val date: String
 ) {
 
-    @Convert(converter = StatusConverter::class)
     var status = Status.QUEUED
         private set
 
