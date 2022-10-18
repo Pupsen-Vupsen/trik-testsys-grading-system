@@ -35,5 +35,4 @@ tasks
 logs
 TRIKStudio
 submissions
-docker
 *.sh
