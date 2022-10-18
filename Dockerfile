@@ -12,23 +12,23 @@ ARG INSTALLER=installer.run
 ARG RELEASE_INSTALLER_URL=https://dl.trikset.com/ts/trik-studio-installer-gnu64.run
 ARG MASTER_INSTALLER_URL=https://dl.trikset.com/ts/fresh/installer/trik-studio-installer-linux-master.run
 
-#Updating system
+#Updating system and installing packages
 WORKDIR /
-RUN apt-get -y update
+ARG DEBIAN_FRONTEND=noninteractive
+RUN echo 'APT::Install-Recommends "0";' > /etc/apt/apt.conf.d/99norecommends \
+    && apt-get -y update \
+    && apt-get -y install \
+    apt-utils \
+    default-jdk \
+    wget \
+    curl \
+    libpulse0 \
+    locales \
+    libxkbcommon-x11-0 \
+    && apt-get autoremove -y \
+    && apt-get clean -y
 
-#Installing utils
-WORKDIR /
-RUN apt-get -y install apt-utils default-jdk wget curl qt5-default
-
-#Installing missing libs
-WORKDIR /
-RUN apt-get -y install libpulse0
-
-# Setting russian locale
-WORKDIR /
-RUN apt-get install -y locales
-RUN sed -i -e \
-  's/# ru_RU.UTF-8 UTF-8/ru_RU.UTF-8 UTF-8/' /etc/locale.gen \
+RUN echo 'ru_RU.UTF-8 UTF-8' > /etc/locale.gen \
    && locale-gen
 ENV LANG ru_RU.UTF-8
 ENV LANGUAGE ru_RU:ru
