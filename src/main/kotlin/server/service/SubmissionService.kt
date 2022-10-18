@@ -205,7 +205,7 @@ class SubmissionService {
                             "$submissionDir${FilePostfixes.TESTING.text}${FilePostfixes.QRS.text}"
                 )
 
-        return waitOrKillProcess(twoDModelProcess, 120)
+        return waitOrKillProcess(twoDModelProcess, 180)
     }
 
     private fun waitOrKillProcess(process: Process, timeout: Long): Boolean {
