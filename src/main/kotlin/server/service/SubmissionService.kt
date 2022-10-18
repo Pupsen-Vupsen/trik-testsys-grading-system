@@ -14,7 +14,9 @@ import org.springframework.scheduling.annotation.EnableAsync
 import org.springframework.stereotype.Service
 
 import java.io.File
+import java.security.MessageDigest
 import java.util.concurrent.Executor
+import java.util.concurrent.TimeUnit
 
 @Service
 @EnableAsync
@@ -36,39 +38,40 @@ class SubmissionService {
         return submissions
     }
 
-    fun getLastSubmissionIdOrNull(): Long? {
-        val submissions = getAllSubmissionsOrNull()
-        return submissions?.maxByOrNull { it.id }?.id
+    fun saveSubmission(submission: Submission): Submission {
+        submission.changeStatus(Status.QUEUED)
+        return submissionRepository.save(submission)
     }
 
-    fun saveSubmission(submission: Submission): Long {
-        submissionRepository.save(submission)
-        logger.info("[${submission.id}]: Saved to database.")
-
-        val countOfTests = prepareForTesting(submission.id)
-        submission.countOfTests = countOfTests
-
-        submissionRepository.save(submission)
-        return submission.id
-    }
-
-    private fun prepareForTesting(id: Long): Int {
-        logger.info("[$id]: Started preparing for testing.")
-        val submission = submissionRepository.findSubmissionById(id) ?: throw Exception("WTF?!")
+    fun prepareForTesting(submission: Submission) {
+        val submissionId = submission.id
+        logger.info("[$submissionId]: Started preparing for testing.")
 
         val submissionDir = Paths.SUBMISSIONS.text + "${submission.id}/"
-        File(Paths.TASKS.text + findTaskName(submission.taskName)).copyRecursively(File(submissionDir))
-        logger.info("[$id]: Copied tests poles and pin.txt.")
+
+        try {
+            File(Paths.TASKS.text + findTaskName(submission.taskName)).copyRecursively(File(submissionDir), true)
+        } catch (e: Exception) {
+            logger.error("[$submissionId]: Error while copying task files. Can't find task starts with name ${submission.taskName}: ${e.message}")
+            submission.changeStatus(Status.ERROR)
+            submission.countOfTests = null
+            return
+        }
+        logger.info("[$submissionId]: Copied tests poles and pin.txt.")
 
         File(submissionDir + "results/").mkdir()
-        logger.info("[$id]: Created dir for results.")
+        logger.info("[$submissionId]: Created dir for results.")
 
         val submissionFilePath = submissionDir + "submission" + FilePostfixes.QRS.text
         val testingFilePath = submissionDir + "testing" + FilePostfixes.QRS.text
         File(submissionFilePath).copyTo(File(testingFilePath))
-        logger.info("[$id]: Copied submission for testing.")
+        logger.info("[$submissionId]: Copied submission for testing.")
 
-        return File(Paths.SUBMISSIONS.text + "$id/" + Paths.TESTS.text).listFiles()!!.size
+        submission.countOfTests = File(Paths.SUBMISSIONS.text + "$submissionId/" + Paths.TESTS.text).listFiles()?.size ?: run {
+            logger.error("[$submissionId]: Tests not found. Something went wrong.")
+            submission.changeStatus(Status.ERROR)
+            null
+        }
     }
 
     private fun findTaskName(taskPrefix: String): String {
@@ -82,73 +85,92 @@ class SubmissionService {
     data class TestingResults(val level: String, val message: String)
 
     @Async("testExecutor")
-    fun testSubmission(id: Long) = testExecutor.execute {
-        val submission = submissionRepository.findSubmissionById(id) ?: throw Exception("WTF?!")
-        val submissionDir = Paths.SUBMISSIONS.text + "${submission.id}/"
-
+    fun testSubmission(submission: Submission) = testExecutor.execute {
+        val submissionId = submission.id!!
+        if(submission.countOfTests == null) {
+            logger.warn("[$submissionId]: Tests wont start cause the error while preparing.")
+            return@execute
+        }
+        val submissionDir = Paths.SUBMISSIONS.text + "${submissionId}/"
 
         val testsDir = submissionDir + Paths.TESTS.text
         val resultFilesPath = submissionDir + Paths.RESULTS.text + FilePostfixes.RESULT.text
 
-        logger.info("[$id]: Started testing. Count of tests ${submission.countOfTests}.")
+        logger.info("[$submissionId]: Started testing. Count of tests ${submission.countOfTests}.")
+        submission.changeStatus(Status.RUNNING)
+        var trikMessage = "[ "
         try {
-            File(testsDir).listFiles()!!.forEach { poleFile ->
+            File(testsDir).listFiles()?.forEach { poleFile ->
                 val resultFilePath = resultFilesPath + "_" + poleFile.nameWithoutExtension + FilePostfixes.INFO.text
 
-                executePatcher(submission.id, poleFile.name)
-                logger.info("[$id]: Patched with test ${poleFile.nameWithoutExtension}.")
+                logger.info("[$submissionId]: Trying to patch with test ${poleFile.name}.")
+                val isSuccessfullyPatched = executePatcher(submissionId, poleFile.name)
+                if (!isSuccessfullyPatched) {
+                    logger.error("[$submissionId]: Error while patching with test ${poleFile.name}.")
+                    submission.changeStatus(Status.ERROR)
+                    return@forEach
+                }
+                logger.info("[$submissionId]: Patched with test ${poleFile.nameWithoutExtension}.")
 
-                execute2DModel(submission.id, resultFilePath)
-                logger.info("[$id]: Executed on test ${poleFile.nameWithoutExtension}.")
+                logger.info("[$submissionId]: Trying to execute on test ${poleFile.nameWithoutExtension}.")
+                val isSuccessfullyExecuted = execute2DModel(submissionId, resultFilePath)
+                if (!isSuccessfullyExecuted) {
+                    logger.error("[$submissionId]: Error while executing on test ${poleFile.nameWithoutExtension}.")
+                    submission.changeStatus(Status.ERROR)
+                    return@forEach
+                }
+                logger.info("[$submissionId]: Executed on test ${poleFile.nameWithoutExtension}.")
 
                 val logFile = File(resultFilePath)
 
                 if (logFile.readBytes().isEmpty()) {
                     submission.deny()
-                    logger.warn("[$id]: Cannot generate correct log file.")
+                    logger.warn("[$submissionId]: Cannot generate correct log file.")
                 } else {
-                    val log = Klaxon().parseArray<TestingResults>(logFile)
-
-                    if (log == null || log.last().level == "error") {
+                    val log = Klaxon().parseArray<TestingResults>(logFile) ?: run {
                         submission.deny()
-                        logger.info("[$id]: Submission failed test ${poleFile.name}.")
+                        logger.warn("[$submissionId]: Cannot parse log file.")
+                        return@forEach
+                    }
+
+                    var message = "{ "
+                    log.forEach {
+                        message += "\"" + it.level + "\":" + "\"" + it.message + "\","
+                    }
+                    message = message.dropLast(1) + "},"
+                    trikMessage += message
+
+                    if (log.any { it.level == "error" }) {
+                        submission.deny()
+                        logger.info("[$submissionId]: Failed test ${poleFile.name}.")
                     } else {
                         submission.countOfSuccessfulTests++
-                        logger.info("[$id]: Submission passed test ${poleFile.name}.")
+                        logger.info("[$submissionId]: Passed test ${poleFile.name}.")
                     }
                 }
+            } ?: run {
+                logger.error("[$submissionId]: Tests not found. Something went wrong.")
+                logger.error("[$submissionId]: Stopped testing.")
+
+                submission.changeStatus(Status.ERROR)
+                submissionRepository.save(submission)
             }
 
             if (submission.countOfSuccessfulTests == submission.countOfTests) {
                 submission.accept()
-                logger.info("[$id]: Started generating hash and pin.")
-                generateHashAndPin(submission)
-                logger.info("[$id]: Successfully generated hash and pin.")
+                logger.info("[$submissionId]: Started generating hash.")
+                generateHash(submission)
+                logger.info("[$submissionId]: Successfully generated hash.")
             }
-            logger.info("[$id]: Successful tests ${submission.countOfSuccessfulTests}/${submission.countOfTests}.")
+
+            submission.trikMessage = trikMessage.dropLast(1) + "]"
+            logger.info("[$submissionId]: Successful tests ${submission.countOfSuccessfulTests}/${submission.countOfTests}.")
         } catch (e: Exception) {
-            logger.error("[$id]: Caught exception while testing file: ${e.stackTraceToString()}!")
-            submission.deny()
+            logger.error("[$submissionId]: Caught exception while testing file: ${e.message}")
+            submission.changeStatus(Status.ERROR)
         }
         submissionRepository.save(submission)
-        deleteTestingFiles(id)
-    }
-
-    fun changeSubmissionStatus(id: Long, newStatus: Char) {
-        val submission = getSubmissionOrNull(id)!!
-
-        if (newStatus == '+') {
-            logger.info("[$id]: Changed status to accepted.")
-            submission.accept()
-
-            logger.info("[$id]: Started generating hash and pin.")
-            generateHashAndPin(submission)
-        } else {
-            logger.info("[$id]: Changed status to denied.")
-            submission.deny()
-        }
-
-        submissionRepository.save(submission)
+        deleteTestingFiles(submissionId)
     }
 
     private fun deleteTestingFiles(id: Long) {
@@ -161,60 +183,47 @@ class SubmissionService {
         logger.info("[$id]: Deleted testing file.")
     }
 
-    private fun executePatcher(submissionId: Long, poleFilename: String) {
+    private fun executePatcher(submissionId: Long, poleFilename: String): Boolean {
         val submissionDir = Paths.SUBMISSIONS.text + "$submissionId/"
-        Runtime
-            .getRuntime()
-            .exec(
-                "${TRIKLinux.PATCHER.command} $submissionDir${Paths.TESTS.text}/$poleFilename " +
-                        "$submissionDir${FilePostfixes.TESTING.text}${FilePostfixes.QRS.text}"
-            ).waitFor()
+        val patcherProcess =
+            Runtime
+                .getRuntime()
+                .exec(
+                    "${TRIKCommands.PATCHER.command} $submissionDir${Paths.TESTS.text}/$poleFilename " +
+                            "$submissionDir${FilePostfixes.TESTING.text}${FilePostfixes.QRS.text}"
+                )
+        return waitOrKillProcess(patcherProcess, 10)
     }
 
-    private fun execute2DModel(submissionId: Long, resultPath: String) {
+    private fun execute2DModel(submissionId: Long, resultPath: String): Boolean {
         val submissionDir = Paths.SUBMISSIONS.text + "$submissionId/"
-        Runtime
-            .getRuntime()
-            .exec(
-                "${TRIKLinux.TWO_D_MODEL.command} $resultPath " +
-                        "$submissionDir${FilePostfixes.TESTING.text}${FilePostfixes.QRS.text}"
-            ).waitFor()
+        val twoDModelProcess =
+            Runtime
+                .getRuntime()
+                .exec(
+                    "${TRIKCommands.TWO_D_MODEL.command} $resultPath " +
+                            "$submissionDir${FilePostfixes.TESTING.text}${FilePostfixes.QRS.text}"
+                )
+
+        return waitOrKillProcess(twoDModelProcess, 180)
     }
 
-    private fun generateHashAndPin(submission: Submission) {
-        val submissionFilePath = Paths.SUBMISSIONS.text + "${submission.id}/submission" + FilePostfixes.QRS.text
-        val hashAndPinFilePath = Paths.SUBMISSIONS.text + "${submission.id}/" + FilePostfixes.HASH_PIN_TXT.text
-
-        Runtime
-            .getRuntime()
-            .exec("./generate_hash.sh $submissionFilePath $hashAndPinFilePath")
-            .waitFor()
-
-        val hash = File(hashAndPinFilePath).readLines()[0].reversed()
-        var newHash = ""
-        for (i in 0..7) {
-            newHash += hash[i * 4]
+    private fun waitOrKillProcess(process: Process, timeout: Long): Boolean {
+        if (!process.waitFor(timeout, TimeUnit.SECONDS)) {
+            process.destroyForcibly()
+            return false
         }
-        val range = getPinRange(submission.id)
-        val pin = newHash.toLong(16) % range.first + range.second
-
-        Runtime
-            .getRuntime()
-            .exec("./echo_pin.sh $pin $hashAndPinFilePath")
-            .waitFor()
-
-        val strings = File(hashAndPinFilePath).readLines()
-        submission.hash = strings[0]
-        submission.pin = strings[1]
+        return true
     }
 
-    private fun getPinRange(submissionId: Long): Pair<Long, Long> {
-        val pinRangeFilePath = Paths.SUBMISSIONS.text + "$submissionId/" + Paths.PIN.text
-        val strings = File(pinRangeFilePath).readLines()
+    private fun generateHash(submission: Submission) {
+        val submissionFilePath = Paths.SUBMISSIONS.text + "${submission.id}/submission" + FilePostfixes.QRS.text
 
-        val pinRange = strings[0].toLong()
-        val firstPin = strings[1].toLong()
+        val hash = MessageDigest
+            .getInstance("SHA-256")
+            .digest(File(submissionFilePath).readBytes())
+            .fold("") { str, it -> str + "%02x".format(it) }
 
-        return pinRange to firstPin
+        submission.hash = hash
     }
 }
