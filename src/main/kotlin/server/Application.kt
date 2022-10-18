@@ -28,8 +28,8 @@ class Application {
     @Bean("testExecutor")
     fun createTestExecutor(): Executor? {
         val executor = ThreadPoolTaskExecutor()
-        executor.corePoolSize = 6
-        executor.maxPoolSize = 6
+        executor.corePoolSize = 15
+        executor.maxPoolSize = 15
         executor.setQueueCapacity(5000)
         executor.initialize()
         return executor
