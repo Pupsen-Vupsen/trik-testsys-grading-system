@@ -41,17 +41,11 @@ COPY docker/trik_studio_installscript.qs install_script.qs
 
 #Downloading TRIK Studio
 WORKDIR /$APP_DIR/$INSTALLER_DIR
-ARG TRIK_STUDIO_VERSION=2022.2
-RUN curl --output $INSTALLER $RELEASE_INSTALLER_URL
+RUN curl --output $INSTALLER $MASTER_INSTALLER_URL
 
 #Setting installer executable
 WORKDIR /$APP_DIR/$INSTALLER_DIR
 RUN chmod +x $INSTALLER
-
-#Checking installer sha1 sum
-#WORKDIR /$APP_DIR/$INSTALLER_DIR
-#ARG INSTALLER_SHA1_SUM=c0732c4
-#RUN ./$INSTALLER --version | grep -F $INSTALLER_SHA1_SUM
 
 #Installing TRIKStudio
 WORKDIR /$APP_DIR
@@ -62,7 +56,8 @@ RUN env INSTALL_DIR=/$APP_DIR/$TRIK_STUDIO_DIR ./$INSTALLER_DIR/$INSTALLER --scr
 
 #Checking TRIK Studio version
 WORKDIR /$APP_DIR/$TRIK_STUDIO_DIR
-RUN ./trik-studio -platform offscreen --version | grep -F $TRIK_STUDIO_VERSION
+RUN ./trik-studio -platform offscreen --version | grep -F  \
+    $(curl -s https://api.github.com/repos/trikset/trik-studio/commits/master | grep sha | head -n 1 | cut -d '"' -f 4 | cut -c 1-6)
 
 #Removing installer and script
 WORKDIR /$APP_DIR
@@ -78,7 +73,7 @@ RUN rm -r $INSTALLER_DIR
 
 #Copying application
 WORKDIR /$APP_DIR
-ARG JAR_FILE=build/libs/trik-testsys-2.0.0.jar
+ARG JAR_FILE=build/libs/trik-testsys-2.0.7.jar
 ARG APP=app.jar
 COPY $JAR_FILE $APP
 
