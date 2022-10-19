@@ -39,8 +39,13 @@ class SubmissionService {
     }
 
     fun saveSubmission(submission: Submission): Submission {
-        submission.changeStatus(Status.QUEUED)
         return submissionRepository.save(submission)
+    }
+
+    fun refreshSubmission(submission: Submission) {
+        submission.changeStatus(Status.QUEUED)
+        submission.countOfSuccessfulTests = 0
+        saveSubmission(submission)
     }
 
     fun prepareForTesting(submission: Submission) {
@@ -57,21 +62,31 @@ class SubmissionService {
             submission.countOfTests = null
             return
         }
-        logger.info("[$submissionId]: Copied tests poles and pin.txt.")
+        logger.info("[$submissionId]: Copied tests poles.")
 
         File(submissionDir + "results/").mkdir()
         logger.info("[$submissionId]: Created dir for results.")
 
         val submissionFilePath = submissionDir + "submission" + FilePostfixes.QRS.text
         val testingFilePath = submissionDir + "testing" + FilePostfixes.QRS.text
+
+        if (!File(submissionFilePath).exists()) {
+            logger.error("[$submissionId]: Can't find submission file.")
+            submission.changeStatus(Status.ERROR)
+            submission.countOfTests = null
+            saveSubmission(submission)
+            return
+        }
         File(submissionFilePath).copyTo(File(testingFilePath))
         logger.info("[$submissionId]: Copied submission for testing.")
 
-        submission.countOfTests = File(Paths.SUBMISSIONS.text + "$submissionId/" + Paths.TESTS.text).listFiles()?.size ?: run {
-            logger.error("[$submissionId]: Tests not found. Something went wrong.")
-            submission.changeStatus(Status.ERROR)
-            null
-        }
+        submission.countOfTests =
+            File(Paths.SUBMISSIONS.text + "$submissionId/" + Paths.TESTS.text).listFiles()?.size ?: run {
+                logger.error("[$submissionId]: Tests not found. Something went wrong.")
+                submission.changeStatus(Status.ERROR)
+                saveSubmission(submission)
+                null
+            }
     }
 
     private fun findTaskName(taskPrefix: String): String {
@@ -87,7 +102,7 @@ class SubmissionService {
     @Async("testExecutor")
     fun testSubmission(submission: Submission) = testExecutor.execute {
         val submissionId = submission.id!!
-        if(submission.countOfTests == null) {
+        if (submission.countOfTests == null) {
             logger.warn("[$submissionId]: Tests wont start cause the error while preparing.")
             return@execute
         }
@@ -135,7 +150,7 @@ class SubmissionService {
 
                     var message = "{ "
                     log.forEach {
-                        message += "\"" + it.level + "\":" + "\"" + it.message + "\","
+                        message = "\"${it.level}\": \"${it.message}\", "
                     }
                     message = message.dropLast(1) + "},"
                     trikMessage += message

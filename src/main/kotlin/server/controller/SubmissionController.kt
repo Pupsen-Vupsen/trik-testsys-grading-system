@@ -236,6 +236,8 @@ class SubmissionController {
             } else {
                 logger.warn("[$submissionId]: Uploading file is empty or not .qrs file.")
 
+                submission.changeStatus(Status.ERROR)
+                submissionService.saveSubmission(submission)
                 ResponseEntity
                     .status(HttpStatus.UNPROCESSABLE_ENTITY)
                     .body(uploadingFileEmptyOrNotQrsJson)
@@ -243,6 +245,8 @@ class SubmissionController {
         } catch (e: Exception) {
             logger.error("[${submissionId}]: Caught exception while uploading file: ${e.stackTraceToString()}!")
 
+            submission.changeStatus(Status.ERROR)
+            submissionService.saveSubmission(submission)
             ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(serverErrorJson)
@@ -261,20 +265,17 @@ class SubmissionController {
                     .body(thereIsNoSubmissionJson)
             }
 
-        if (submission.status == Status.ACCEPTED) {
-            logger.warn("[$id]: Submission is already accepted.")
-            return ResponseEntity
-                .status(HttpStatus.UNPROCESSABLE_ENTITY)
-                .body(submissionAlreadyAcceptedJson)
-        } else if (submission.status == Status.QUEUED || submission.status == Status.RUNNING) {
+        /*if (submission.status == Status.QUEUED || submission.status == Status.RUNNING) {
             logger.warn("[$id]: Submission is queued or testing.")
             return ResponseEntity
                 .status(HttpStatus.METHOD_NOT_ALLOWED)
                 .body(submissionIsNotTestedYetJson)
-        }
+        }*/
 
-        submissionService.saveSubmission(submission)
+        submissionService.refreshSubmission(submission)
+        submissionService.prepareForTesting(submission)
         submissionService.testSubmission(submission)
+
 
         logger.info("[$id]: Saved rechecking submission.")
 
@@ -316,11 +317,11 @@ class SubmissionController {
         )
     )
 
-    private val submissionAlreadyAcceptedJson = JsonObject(
+    private val submissionHasErrorJson = JsonObject(
         mapOf(
             "code" to 422,
             "error_type" to "client",
-            "message" to "Submission is already accepted."
+            "message" to "Submission has error."
         )
     )
 

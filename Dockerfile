@@ -63,17 +63,17 @@ RUN ./trik-studio -platform offscreen --version | grep -F  \
 WORKDIR /$APP_DIR
 RUN rm -r $INSTALLER_DIR
 
-##Copying tasks (only for testing container)
-#WORKDIR /
-#COPY tasks tasks
+#Copying tasks (only for testing container)
+WORKDIR /
+COPY tasks tasks
 
-##Creating directory for submissions
-#WORKDIR /
-#RUN mkdir submissions
+#Creating directory for submissions
+WORKDIR /
+RUN mkdir submissions
 
 #Copying application
 WORKDIR /$APP_DIR
-ARG JAR_FILE=build/libs/trik-testsys-2.0.7.jar
+ARG JAR_FILE=build/libs/trik-testsys-2.0.11.jar
 ARG APP=app.jar
 COPY $JAR_FILE $APP
 
