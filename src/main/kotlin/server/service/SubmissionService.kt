@@ -77,7 +77,7 @@ class SubmissionService {
             saveSubmission(submission)
             return
         }
-        File(submissionFilePath).copyTo(File(testingFilePath))
+        File(submissionFilePath).copyTo(File(testingFilePath), true)
         logger.info("[$submissionId]: Copied submission for testing.")
 
         submission.countOfTests =
@@ -150,9 +150,9 @@ class SubmissionService {
 
                     var message = "{ "
                     log.forEach {
-                        message = "\"${it.level}\": \"${it.message}\", "
+                        message += "\"${it.level}\": \"${it.message}\", "
                     }
-                    message = message.dropLast(1) + "},"
+                    message = message.dropLast(2) + "},"
                     trikMessage += message
 
                     if (log.any { it.level == "error" }) {
