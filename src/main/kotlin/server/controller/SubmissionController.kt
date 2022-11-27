@@ -265,12 +265,12 @@ class SubmissionController {
                     .body(thereIsNoSubmissionJson)
             }
 
-        /*if (submission.status == Status.QUEUED || submission.status == Status.RUNNING) {
+        if (submission.status == Status.QUEUED || submission.status == Status.RUNNING) {
             logger.warn("[$id]: Submission is queued or testing.")
             return ResponseEntity
                 .status(HttpStatus.METHOD_NOT_ALLOWED)
                 .body(submissionIsNotTestedYetJson)
-        }*/
+        }
 
         submissionService.refreshSubmission(submission)
         submissionService.prepareForTesting(submission)
@@ -291,6 +291,40 @@ class SubmissionController {
         return ResponseEntity
             .status(HttpStatus.OK)
             .body(submissionJson)
+    }
+
+    // TODO: Add to documentation
+    @PatchMapping("/submissions/recheck")
+    fun recheckSubmissions(@RequestParam ids: List<Long>): ResponseEntity<JsonArray<Any>> {
+        logger.info("Client requested recheck submissions.")
+
+        val submissionStatuses = mutableMapOf<Long, Int?>()
+
+        ids.forEach { id ->
+            val submission = submissionService.getSubmissionOrNull(id)
+                ?: run {
+                    logger.warn("[$id]: There is no submission with this id.")
+                    submissionStatuses[id] = null
+                    return@forEach
+                }
+
+            if (submission.status == Status.QUEUED || submission.status == Status.RUNNING)
+                logger.warn("[$id]: Submission is queued or testing.")
+
+            submissionService.refreshSubmission(submission)
+            submissionService.prepareForTesting(submission)
+            submissionService.testSubmission(submission)
+
+            submissionStatuses[id] = submission.status.code
+
+            logger.info("[$id]: Saved rechecking submission.")
+        }
+
+        val submissionsJson = convertFromMutableMapToJsonArray(submissionStatuses)
+
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(submissionsJson)
     }
 
     private val thereIsNoSubmissionJson = JsonObject(
