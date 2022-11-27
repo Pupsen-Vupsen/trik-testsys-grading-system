@@ -13,10 +13,10 @@ Grading system server part for TRIK Studio, which allows you to test you task us
 ## How to run locally
 
 1. Copy this repository to your local machine.
-2. Install Java version 16 or later.
+2. Install Java version 11 or later.
 3. Move to the root of the project.
 4. Run `./gradlew :bootJar`.
-5. Run `java -jar ./build/libs/trik-testsys-*version*.jar`.
+5. Run `java -jar ./build/libs/trik-testsys-grading-system-<version>.jar`.
 
 ## How to run via Docker
 
