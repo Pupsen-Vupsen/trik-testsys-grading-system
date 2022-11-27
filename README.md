@@ -4,6 +4,8 @@
 
 # Server part for TRIK Studio grading system
 
+Current Swagger documentation to API is available [here](https://app.swaggerhub.com/apis/5h15h4k1n9/trik-testsys-grading-system/2.0.6).
+
 ## Overview 
 
 Grading system server part for TRIK Studio, which allows you to test you task using TRIK Studio engine.
