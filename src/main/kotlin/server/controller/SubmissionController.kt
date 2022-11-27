@@ -308,9 +308,11 @@ class SubmissionController {
                     return@forEach
                 }
 
-            if (submission.status == Status.QUEUED || submission.status == Status.RUNNING)
+            if (submission.status == Status.QUEUED || submission.status == Status.RUNNING) {
                 logger.warn("[$id]: Submission is queued or testing.")
-
+                submissionStatuses[id] = submission.status.code
+                return@forEach
+            }
             submissionService.refreshSubmission(submission)
             submissionService.prepareForTesting(submission)
             submissionService.testSubmission(submission)
