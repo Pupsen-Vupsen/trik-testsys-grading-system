@@ -3,6 +3,7 @@ pull_request_rules:
     conditions:
       - base=master
       - check-success=build
+      - check-success=test
       - -title~=(?i)wip
     actions:
       merge:
