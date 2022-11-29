@@ -1,7 +1,6 @@
 package server.controller
 
 import server.service.SubmissionService
-import server.entity.Submission
 import server.enum.*
 
 import org.springframework.beans.factory.annotation.Autowired
@@ -15,9 +14,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import java.io.FileInputStream
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
-import java.time.LocalDate
 
 import com.beust.klaxon.JsonArray
 import com.beust.klaxon.JsonObject
@@ -202,11 +198,8 @@ class SubmissionController {
         @RequestBody file: MultipartFile
     ): ResponseEntity<JsonObject> {
         logger.info("Got file!")
-        val date = LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) +
-                "-" +
-                LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
 
-        val submission = submissionService.saveSubmission(Submission(taskName, studentId, date))
+        val submission = submissionService.saveSubmission(taskName, studentId)
         val submissionId = submission.id!!
         val fileUploader = FileUploader(file, submissionId)
         return try {
@@ -223,7 +216,7 @@ class SubmissionController {
                         "status" to submission.status,
                         "student_id" to submission.studentId,
                         "task_name" to taskName,
-                        "date" to date
+                        "date" to submission.date
                     )
                 )
                 ResponseEntity
