@@ -477,7 +477,7 @@ class SubmissionControllerTest {
                 .andExpect(jsonPath("\$.message").value(Jsons.uploadingFileEmptyOrNotQrsJson.getValue("message")))
         }
 
-        @Test
+        /*@Test
         fun `postSubmission should return json with info about uploaded submission`() {
             val file = File("src/test/resources/post_submission_test_files/qrs-file.qrs")
             val multipartFile = MockMultipartFile("file", file.name, "text/plain", file.readBytes())
@@ -506,7 +506,7 @@ class SubmissionControllerTest {
                 .andExpect(jsonPath("\$.student_id").value(submission.studentId))
                 .andExpect(jsonPath("\$.task_name").value(submission.taskName))
                 .andExpect(jsonPath("\$.date").value(submission.date))
-        }
+        }*/
     }
 
     @Nested
