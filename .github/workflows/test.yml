@@ -24,6 +24,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle
 
+      - name: Prepare for testing
+        run: mkdir -p ./submission
+
       - name: Run test
         run: |
           ./gradlew :clean
