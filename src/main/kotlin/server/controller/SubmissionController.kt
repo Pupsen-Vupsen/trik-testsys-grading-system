@@ -14,7 +14,6 @@ import org.springframework.web.multipart.MultipartFile
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import java.io.File
 import java.io.FileInputStream
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -172,7 +171,7 @@ class SubmissionController {
     fun getSubmissionFile(@RequestParam id: Long): ResponseEntity<Any> {
         logger.info("[$id]: Client requested submission file.")
 
-        val submission = submissionService.getSubmissionOrNull(id)
+        val submissionFile = submissionService.getSubmissionFileOrNull(id)
             ?: run {
                 logger.warn("[$id]: There is no submission with this id.")
                 return ResponseEntity
@@ -180,10 +179,8 @@ class SubmissionController {
                     .body(Jsons.thereIsNoSubmissionJson)
             }
 
-        val submissionFilePath = Paths.SUBMISSIONS.text + "${submission.id}/submission" + FilePostfixes.QRS.text
-
         val stream = try {
-            InputStreamResource(FileInputStream(File(submissionFilePath)))
+            InputStreamResource(FileInputStream(submissionFile))
         } catch (e: Exception) {
             logger.error("[$id]: Caught exception while returning file: ${e.stackTraceToString()}!")
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Jsons.serverErrorJson)
@@ -294,12 +291,12 @@ class SubmissionController {
 
     // TODO: Add to documentation
     @PatchMapping("/submissions/recheck")
-    fun recheckSubmissions(@RequestParam ids: List<Long>): ResponseEntity<JsonArray<Any>> {
+    fun recheckSubmissions(@RequestParam id_array: List<Long>): ResponseEntity<JsonArray<Any>> {
         logger.info("Client requested recheck submissions.")
 
         val submissionStatuses = mutableMapOf<Long, Int?>()
 
-        ids.forEach { id ->
+        id_array.forEach { id ->
             val submission = submissionService.getSubmissionOrNull(id)
                 ?: run {
                     logger.warn("[$id]: There is no submission with this id.")

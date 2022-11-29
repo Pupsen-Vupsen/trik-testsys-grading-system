@@ -32,6 +32,16 @@ class SubmissionService {
 
     fun getSubmissionOrNull(id: Long) = submissionRepository.findSubmissionById(id)
 
+    fun getSubmissionFileOrNull(id: Long): File? {
+        val submission = getSubmissionOrNull(id)
+
+        return if (submission != null) {
+            File(Paths.SUBMISSIONS.text + "${submission.id}/submission" + FilePostfixes.QRS.text)
+        } else {
+            null
+        }
+    }
+
     fun getAllSubmissionsOrNull(): List<Submission>? {
         val submissions = submissionRepository.findAll().toList()
         if (submissions.isEmpty()) return null
