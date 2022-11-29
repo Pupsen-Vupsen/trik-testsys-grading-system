@@ -1,5 +1,11 @@
 package controller
 
+import server.Application
+import server.entity.Submission
+import server.enum.Jsons
+import server.enum.Status
+import server.service.SubmissionService
+
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -9,16 +15,13 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.http.MediaType
+import org.springframework.mock.web.MockMultipartFile
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 
-
-import server.Application
-import server.entity.Submission
-import server.enum.Jsons
-import server.enum.Status
-import server.service.SubmissionService
+import java.io.File
 
 @SpringBootTest(classes = [Application::class])
 @AutoConfigureMockMvc
@@ -176,7 +179,7 @@ class SubmissionControllerTest {
     inner class GetSubmissionInfo {
 
         @Test
-        fun `getSubmissionInfo should return json with info about not existing submission`() {
+        fun `getSubmissionInfo should return json with info about not found submission`() {
             Mockito.`when`(submissionService.getSubmissionOrNull(1)).thenReturn(null)
 
             mockMvc.perform(
@@ -186,6 +189,7 @@ class SubmissionControllerTest {
                 .andExpect(status().isNotFound)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("\$").isNotEmpty)
+
                 .andExpect(jsonPath("\$.code").value(Jsons.thereIsNoSubmissionJson.getValue("code")))
                 .andExpect(jsonPath("\$.error_type").value(Jsons.thereIsNoSubmissionJson.getValue("error_type")))
                 .andExpect(jsonPath("\$.message").value(Jsons.thereIsNoSubmissionJson.getValue("message")))
@@ -299,6 +303,211 @@ class SubmissionControllerTest {
             .andExpect(jsonPath("\$[3].count_of_tests").value(null))
             .andExpect(jsonPath("\$[3].count_of_successful_tests").value(null))
             .andExpect(jsonPath("\$[3].trik_message").value(null))
+    }
+
+    @Nested
+    inner class GetSubmissionFile {
+
+        @Test
+        fun `getSubmissionFile should json with info about not found submission`() {
+            Mockito.`when`(submissionService.getSubmissionFileOrNull(1)).thenReturn(null)
+
+            mockMvc.perform(
+                get("/v2/grading-system/submissions/submission/download")
+                    .param("id", "1")
+            )
+                .andExpect(status().isNotFound)
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("\$").isNotEmpty)
+
+                .andExpect(jsonPath("\$.code").value(Jsons.thereIsNoSubmissionJson.getValue("code")))
+                .andExpect(jsonPath("\$.error_type").value(Jsons.thereIsNoSubmissionJson.getValue("error_type")))
+                .andExpect(jsonPath("\$.message").value(Jsons.thereIsNoSubmissionJson.getValue("message")))
+        }
+
+        @Test
+        fun `getSubmissionFile should return existing submission file`() {
+            val file = File("src/test/resources/get-submission-file-test_file.qrs")
+            Mockito.`when`(submissionService.getSubmissionFileOrNull(1)).thenReturn(file)
+
+            mockMvc.perform(
+                get("/v2/grading-system/submissions/submission/download")
+                    .param("id", "1")
+            )
+                .andExpect(status().isOk)
+                .andExpect(content().contentType(MediaType.APPLICATION_OCTET_STREAM))
+                .andExpect(content().bytes(file.readBytes()))
+        }
+
+        @Test
+        fun `getSubmissionFile should return json with info about error then caught exception`() {
+            val nonExistingFile = File("src/test/resources/non-existing-file.qrs")
+            Mockito.`when`(submissionService.getSubmissionFileOrNull(1)).thenReturn(nonExistingFile)
+
+            mockMvc.perform(
+                get("/v2/grading-system/submissions/submission/download")
+                    .param("id", "1")
+            )
+                .andExpect(status().isInternalServerError)
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("\$").isNotEmpty)
+
+                .andExpect(jsonPath("\$.code").value(Jsons.serverErrorJson.getValue("code")))
+                .andExpect(jsonPath("\$.error_type").value(Jsons.serverErrorJson.getValue("error_type")))
+                .andExpect(jsonPath("\$.message").value(Jsons.serverErrorJson.getValue("message")))
+        }
+    }
+
+    @Nested
+    inner class PostSubmission {
+
+        @Test
+        fun `postSubmission should return json with info about getting not qrs file #1`() {
+            val file = File("src/test/resources/post_submission_test_files/not-qrs-file.txt")
+            val multipartFile = MockMultipartFile("file", file.name, "text/plain", file.readBytes())
+
+            val submission = createSubmission(
+                1,
+                taskName = "task1",
+                studentId = "student1",
+            )
+
+            Mockito.`when`(submissionService.saveSubmission(submission.taskName, submission.studentId))
+                .thenReturn(submission)
+
+            mockMvc.perform(
+                multipart("/v2/grading-system/submissions/submission/upload")
+                    .file(multipartFile)
+                    .param("task_name", submission.taskName)
+                    .param("student_id", submission.studentId)
+            )
+                .andExpect(status().isUnprocessableEntity)
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("\$").isNotEmpty)
+
+                .andExpect(jsonPath("\$.code").value(Jsons.uploadingFileEmptyOrNotQrsJson.getValue("code")))
+                .andExpect(jsonPath("\$.error_type").value(Jsons.uploadingFileEmptyOrNotQrsJson.getValue("error_type")))
+                .andExpect(jsonPath("\$.message").value(Jsons.uploadingFileEmptyOrNotQrsJson.getValue("message")))
+        }
+
+        @Test
+        fun `postSubmission should return json with info about getting not qrs file #2`() {
+            val file = File("src/test/resources/post_submission_test_files/not-qrs-file2.qrs")
+            val multipartFile = MockMultipartFile("file", file.name, "text/plain", file.readBytes())
+
+            val submission = createSubmission(
+                1,
+                taskName = "task1",
+                studentId = "student1",
+            )
+
+            Mockito.`when`(submissionService.saveSubmission(submission.taskName, submission.studentId))
+                .thenReturn(submission)
+
+            mockMvc.perform(
+                multipart("/v2/grading-system/submissions/submission/upload")
+                    .file(multipartFile)
+                    .param("task_name", submission.taskName)
+                    .param("student_id", submission.studentId)
+            )
+                .andExpect(status().isUnprocessableEntity)
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("\$").isNotEmpty)
+
+                .andExpect(jsonPath("\$.code").value(Jsons.uploadingFileEmptyOrNotQrsJson.getValue("code")))
+                .andExpect(jsonPath("\$.error_type").value(Jsons.uploadingFileEmptyOrNotQrsJson.getValue("error_type")))
+                .andExpect(jsonPath("\$.message").value(Jsons.uploadingFileEmptyOrNotQrsJson.getValue("message")))
+        }
+
+        @Test
+        fun `postSubmission should return json with info about getting not qrs file #3`() {
+            val file = File("src/test/resources/post_submission_test_files/not-qrs-file3.qrs")
+            val multipartFile = MockMultipartFile("file", file.name, "text/plain", file.readBytes())
+
+            val submission = createSubmission(
+                1,
+                taskName = "task1",
+                studentId = "student1",
+            )
+
+            Mockito.`when`(submissionService.saveSubmission(submission.taskName, submission.studentId))
+                .thenReturn(submission)
+
+            mockMvc.perform(
+                multipart("/v2/grading-system/submissions/submission/upload")
+                    .file(multipartFile)
+                    .param("task_name", submission.taskName)
+                    .param("student_id", submission.studentId)
+            )
+                .andExpect(status().isUnprocessableEntity)
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("\$").isNotEmpty)
+
+                .andExpect(jsonPath("\$.code").value(Jsons.uploadingFileEmptyOrNotQrsJson.getValue("code")))
+                .andExpect(jsonPath("\$.error_type").value(Jsons.uploadingFileEmptyOrNotQrsJson.getValue("error_type")))
+                .andExpect(jsonPath("\$.message").value(Jsons.uploadingFileEmptyOrNotQrsJson.getValue("message")))
+        }
+
+
+        @Test
+        fun `postSubmission should return json with info about getting empty file`() {
+            val file = File("src/test/resources/post_submission_test_files/empty-file.qrs")
+            val multipartFile = MockMultipartFile("file", file.name, "text/plain", file.readBytes())
+
+            val submission = createSubmission(
+                1,
+                taskName = "task1",
+                studentId = "student1",
+            )
+
+            Mockito.`when`(submissionService.saveSubmission(submission.taskName, submission.studentId))
+                .thenReturn(submission)
+
+            mockMvc.perform(
+                multipart("/v2/grading-system/submissions/submission/upload")
+                    .file(multipartFile)
+                    .param("task_name", submission.taskName)
+                    .param("student_id", submission.studentId)
+            )
+                .andExpect(status().isUnprocessableEntity)
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("\$").isNotEmpty)
+
+                .andExpect(jsonPath("\$.code").value(Jsons.uploadingFileEmptyOrNotQrsJson.getValue("code")))
+                .andExpect(jsonPath("\$.error_type").value(Jsons.uploadingFileEmptyOrNotQrsJson.getValue("error_type")))
+                .andExpect(jsonPath("\$.message").value(Jsons.uploadingFileEmptyOrNotQrsJson.getValue("message")))
+        }
+
+        @Test
+        fun `postSubmission should return json with info about uploaded submission`() {
+            val file = File("src/test/resources/post_submission_test_files/qrs-file.qrs")
+            val multipartFile = MockMultipartFile("file", file.name, "text/plain", file.readBytes())
+
+            val submission = createSubmission(
+                1,
+                taskName = "task1",
+                studentId = "student1",
+            )
+
+            Mockito.`when`(submissionService.saveSubmission(submission.taskName, submission.studentId))
+                .thenReturn(submission)
+
+            mockMvc.perform(
+                multipart("/v2/grading-system/submissions/submission/upload")
+                    .file(multipartFile)
+                    .param("task_name", submission.taskName)
+                    .param("student_id", submission.studentId)
+            )
+                .andExpect(status().isOk)
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("\$").isNotEmpty)
+
+                .andExpect(jsonPath("\$.id").value(submission.id))
+                .andExpect(jsonPath("\$.status").value(submission.status.code))
+                .andExpect(jsonPath("\$.student_id").value(submission.studentId))
+                .andExpect(jsonPath("\$.task_name").value(submission.taskName))
+                .andExpect(jsonPath("\$.date").value(submission.date))
+        }
     }
 
     private fun createSubmission(
