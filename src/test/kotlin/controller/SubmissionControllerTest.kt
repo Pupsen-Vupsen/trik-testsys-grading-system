@@ -17,8 +17,7 @@ import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.http.MediaType
 import org.springframework.mock.web.MockMultipartFile
 import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 
 import java.io.File
@@ -309,7 +308,7 @@ class SubmissionControllerTest {
     inner class GetSubmissionFile {
 
         @Test
-        fun `getSubmissionFile should json with info about not found submission`() {
+        fun `getSubmissionFile should return json with info about not found submission`() {
             Mockito.`when`(submissionService.getSubmissionFileOrNull(1)).thenReturn(null)
 
             mockMvc.perform(
@@ -507,6 +506,149 @@ class SubmissionControllerTest {
                 .andExpect(jsonPath("\$.student_id").value(submission.studentId))
                 .andExpect(jsonPath("\$.task_name").value(submission.taskName))
                 .andExpect(jsonPath("\$.date").value(submission.date))
+        }
+    }
+
+    @Nested
+    inner class RecheckSubmission {
+
+        @Test
+        fun `recheckSubmission should return json with info about not found submission`() {
+            Mockito.`when`(submissionService.getSubmissionOrNull(1)).thenReturn(null)
+
+            mockMvc.perform(
+                patch("/v2/grading-system/submissions/submission/recheck")
+                    .param("id", "1")
+            )
+                .andExpect(status().isNotFound)
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("\$").isNotEmpty)
+
+                .andExpect(jsonPath("\$.code").value(Jsons.thereIsNoSubmissionJson.getValue("code")))
+                .andExpect(jsonPath("\$.error_type").value(Jsons.thereIsNoSubmissionJson.getValue("error_type")))
+                .andExpect(jsonPath("\$.message").value(Jsons.thereIsNoSubmissionJson.getValue("message")))
+        }
+
+        @Test
+        fun `recheckSubmission should return json with info that submission is not tested yet is submission is queued`() {
+            val submission = createSubmission(
+                1,
+                taskName = "task1",
+                studentId = "student1",
+                status = Status.QUEUED,
+                date = "2021-01-01 00:00:00"
+            )
+
+            Mockito.`when`(submissionService.getSubmissionOrNull(submission.id!!)).thenReturn(submission)
+
+            mockMvc.perform(
+                patch("/v2/grading-system/submissions/submission/recheck")
+                    .param("id", "1")
+            )
+                .andExpect(status().isMethodNotAllowed)
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("\$").isNotEmpty)
+
+                .andExpect(jsonPath("\$.code").value(Jsons.submissionIsNotTestedYetJson.getValue("code")))
+                .andExpect(jsonPath("\$.error_type").value(Jsons.submissionIsNotTestedYetJson.getValue("error_type")))
+                .andExpect(jsonPath("\$.message").value(Jsons.submissionIsNotTestedYetJson.getValue("message")))
+        }
+
+        @Test
+        fun `recheckSubmission should return json with info that submission is not tested yet is submission is running`() {
+            val submission = createSubmission(
+                1,
+                taskName = "task1",
+                studentId = "student1",
+                status = Status.RUNNING,
+                date = "2021-01-01 00:00:00"
+            )
+
+            Mockito.`when`(submissionService.getSubmissionOrNull(submission.id!!)).thenReturn(submission)
+
+            mockMvc.perform(
+                patch("/v2/grading-system/submissions/submission/recheck")
+                    .param("id", "1")
+            )
+                .andExpect(status().isMethodNotAllowed)
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("\$").isNotEmpty)
+
+                .andExpect(jsonPath("\$.code").value(Jsons.submissionIsNotTestedYetJson.getValue("code")))
+                .andExpect(jsonPath("\$.error_type").value(Jsons.submissionIsNotTestedYetJson.getValue("error_type")))
+                .andExpect(jsonPath("\$.message").value(Jsons.submissionIsNotTestedYetJson.getValue("message")))
+        }
+
+        @Test
+        fun `recheckSubmission should return json with info about rechecking submission`() {
+            val submission = createSubmission(
+                1,
+                taskName = "task1",
+                studentId = "student1",
+                status = Status.FAILED,
+                date = "2021-01-01 00:00:00"
+            )
+
+            Mockito.`when`(submissionService.getSubmissionOrNull(submission.id!!)).thenReturn(submission)
+            Mockito.`when`(submissionService.testSubmission(submission)).then { submission.changeStatus(Status.QUEUED) }
+
+            mockMvc.perform(
+                patch("/v2/grading-system/submissions/submission/recheck")
+                    .param("id", "1")
+            )
+                .andExpect(status().isOk)
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("\$").isNotEmpty)
+
+                .andExpect(jsonPath("\$.id").value(submission.id))
+                .andExpect(jsonPath("\$.status").value(submission.status.code))
+                .andExpect(jsonPath("\$.student_id").value(submission.studentId))
+                .andExpect(jsonPath("\$.task_name").value(submission.taskName))
+                .andExpect(jsonPath("\$.date").value(submission.date))
+
+        }
+
+        @Test
+        fun `recheckArraySubmissions should return json submission array with status or with null`() {
+            val submission1 = createSubmission(
+                1,
+                status = Status.FAILED,
+            )
+            val submission2 = createSubmission(
+                2,
+                status = Status.QUEUED,
+            )
+            val submission3 = createSubmission(
+                3,
+                status = Status.RUNNING,
+            )
+
+            Mockito.`when`(submissionService.getSubmissionOrNull(submission1.id!!)).thenReturn(submission1)
+            Mockito.`when`(submissionService.getSubmissionOrNull(submission2.id!!)).thenReturn(submission2)
+            Mockito.`when`(submissionService.getSubmissionOrNull(submission3.id!!)).thenReturn(submission3)
+            Mockito.`when`(submissionService.getSubmissionOrNull(4)).thenReturn(null)
+
+            Mockito.`when`(submissionService.testSubmission(submission1)).then { submission1.changeStatus(Status.QUEUED) }
+
+            mockMvc.perform(
+                patch("/v2/grading-system/submissions/recheck")
+                    .param("id_array", "1,2,3,4")
+            )
+                .andExpect(status().isOk)
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("\$").isNotEmpty)
+
+                .andExpect(jsonPath("\$[0].id").value(submission1.id))
+                .andExpect(jsonPath("\$[0].status").value(submission1.status.code))
+
+                .andExpect(jsonPath("\$[1].id").value(submission2.id))
+                .andExpect(jsonPath("\$[1].status").value(submission2.status.code))
+
+                .andExpect(jsonPath("\$[2].id").value(submission3.id))
+                .andExpect(jsonPath("\$[2].status").value(submission3.status.code))
+
+                .andExpect(jsonPath("\$[3].id").value(4))
+                .andExpect(jsonPath("\$[3].status").value(null))
         }
     }
 
