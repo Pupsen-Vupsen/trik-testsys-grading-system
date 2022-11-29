@@ -225,7 +225,7 @@ class SubmissionController {
             } else {
                 logger.warn("[$submissionId]: Uploading file is empty or not .qrs file.")
 
-                submission.changeStatus(Status.ERROR)
+                submission.changeStatus(Status.FAILED)
                 submissionService.saveSubmission(submission)
                 ResponseEntity
                     .status(HttpStatus.UNPROCESSABLE_ENTITY)
@@ -283,8 +283,8 @@ class SubmissionController {
     }
 
     // TODO: Add to documentation
-    @PatchMapping("/submissions/recheck")
-    fun recheckSubmissions(@RequestParam id_array: List<Long>): ResponseEntity<JsonArray<Any>> {
+    @PatchMapping("/recheck")
+    fun recheckArraySubmissions(@RequestParam id_array: List<Long>): ResponseEntity<JsonArray<Any>> {
         logger.info("Client requested recheck submissions.")
 
         val submissionStatuses = mutableMapOf<Long, Int?>()
