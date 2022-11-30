@@ -1,0 +1,53 @@
+name: Publish to Docker Hub
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+      runs-on: ubuntu-latest
+      steps:
+      - uses: actions/checkout@v2
+
+      - name: Check if test job and build job passed
+        uses: actions/github-script@v3
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const { data: { check_runs } } = await github.checks.listForRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: context.ref,
+              check_name: 'Test'
+            })
+            if (check_runs.length == 0) {
+              throw new Error('Test job did not run')
+            }
+            if (check_runs[0].conclusion != 'success') {
+              throw new Error('Test job did not pass')
+            }
+            const { data: { check_runs } } = await github.checks.listForRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: context.ref,
+              check_name: 'Build'
+            })
+            if (check_runs.length == 0) {
+              throw new Error('Build job did not run')
+            }
+            if (check_runs[0].conclusion != 'success') {
+              throw new Error('Build job did not pass')
+            }
+
+      - name: Build jar file
+        run: ./gradlew :bootJar
+
+      - name: Publish to Docker Hub
+      - uses: docker/build-push-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: ${{ secrets.DOCKER_REPOSITORY }}
+          tags: ${{ github.ref }}
+          dockerfile: Dockerfile
+          add_git_labels: true
