@@ -13,6 +13,16 @@ jobs:
       - name: Build jar file
         run: ./gradlew :bootJar
 
+      - name: Cache gradle packages
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle
+
       - name: Publish to Docker Hub
         uses: docker/build-push-action@v1
         with:
@@ -21,3 +31,11 @@ jobs:
           repository: ${{ secrets.DOCKER_REPOSITORY }}
           tags: ${GITHUB_REF:11}
           dockerfile: Dockerfile
+
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
