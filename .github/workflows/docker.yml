@@ -52,7 +52,5 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: ${{ secrets.DOCKER_REPOSITORY }}
-          tags:
-            - latest
-            - ${{ steps.generate-tag.outputs.tags }}
+          tags: ${{ steps.generate-tag.outputs.tags }}
           dockerfile: Dockerfile
