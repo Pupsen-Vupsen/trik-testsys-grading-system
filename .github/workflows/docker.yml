@@ -10,9 +10,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Build jar file
-        run: ./gradlew :bootJar
-
       - name: Cache gradle packages
         uses: actions/cache@v2
         with:
@@ -23,14 +20,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle
 
-      - name: Publish to Docker Hub
-        uses: docker/build-push-action@v1
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          repository: ${{ secrets.DOCKER_REPOSITORY }}
-          tags: ${{ github.ref }}
-          dockerfile: Dockerfile
+      - name: Build jar file
+        run: ./gradlew :bootJar
 
       - name: Cache Docker layers
         uses: actions/cache@v2
@@ -39,3 +30,12 @@ jobs:
           key: ${{ runner.os }}-buildx-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-buildx-
+
+      - name: Publish to Docker Hub
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: ${{ secrets.DOCKER_REPOSITORY }}
+          tags: ${{ github.ref }}
+          dockerfile: Dockerfile
