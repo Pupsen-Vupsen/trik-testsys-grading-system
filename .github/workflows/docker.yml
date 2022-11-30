@@ -43,9 +43,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildx-
 
-      - name: Build and push
+      - name: Build
         run: |
           docker build \
             --tag ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPOSITORY }}:${{ steps.generate-tag.outputs.tags }} \
-            --push \
             -f Dockerfile .
+
+      - name: Push
+        run: |
+          docker push ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPOSITORY }}:${{ steps.generate-tag.outputs.tags }}
