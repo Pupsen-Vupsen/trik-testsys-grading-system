@@ -1,3 +1,5 @@
+name: Publish to Docker Hub
+
 on:
   release:
     types: [published]
@@ -10,24 +12,6 @@ jobs:
 
       - name: Build jar file
         run: ./gradlew :bootJar
-
-#      - name: Check if test job passed
-#        uses: actions/github-script@v3
-#        id: check
-#        with:
-#          github-token: ${{secrets.GITHUB_TOKEN}}
-#          script: |
-#            const { data: { check_runs } } = await github.checks.listForRef({
-#              owner: context.repo.owner,
-#              repo: context.repo.repo,
-#              ref: context.ref,
-#              check_name: 'Test'
-#            })
-#            const testJob = check_runs.find(check => check.name === 'Test')
-#            if (testJob.conclusion !== 'success') {
-#              throw new Error('Test job failed')
-#            }
-#            return testJob.conclusion
 
       - name: Publish to Docker Hub
         uses: docker/build-push-action@v1
