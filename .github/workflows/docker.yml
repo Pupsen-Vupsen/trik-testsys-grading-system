@@ -23,14 +23,6 @@ jobs:
       - name: Build jar file
         run: ./gradlew :bootJar
 
-      - name: Cache Docker layers
-        uses: actions/cache@v2
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
-
       - name: Generate tag without v prefix
         id: generate-tag
         run: |
@@ -40,11 +32,20 @@ jobs:
           fi
           echo "::set-output name=tags::${TAGS}"
 
-      - name: Publish to Docker Hub
-        uses: docker/build-push-action@v2
+      - name: Login to DockerHub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Cache Docker layers
+        uses: actions/cache@v2
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          repository: ${{ secrets.DOCKER_REPOSITORY }}
-          tags: ${{ steps.generate-tag.outputs.tags }}
-          dockerfile: Dockerfile
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Build and push
+        run: |
+          docker build \
+            --tag ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPOSITORY }}:${{ steps.generate-tag.outputs.tags }} \
+            --push \
+            -f Dockerfile .
