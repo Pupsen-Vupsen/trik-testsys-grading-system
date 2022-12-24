@@ -78,7 +78,7 @@ COPY docker/generate_hash.sh generate_hash.sh
 
 #Copying application
 WORKDIR /$APP_DIR
-ARG JAR_FILE=build/libs/trik-testsys-1.1.0-TEST.jar
+ARG JAR_FILE=build/libs/trik-testsys-1.1.0.jar
 ARG APP=app.jar
 COPY $JAR_FILE $APP
 
