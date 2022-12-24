@@ -71,6 +71,11 @@ RUN rm -r $INSTALLER_DIR
 #WORKDIR /
 #RUN mkdir submissions
 
+#Copying scripts
+WORKDIR /$APP_DIR
+COPY docker/echo_pin.sh echo_pin.sh
+COPY docker/generate_hash.sh generate_hash.sh
+
 #Copying application
 WORKDIR /$APP_DIR
 ARG JAR_FILE=build/libs/trik-testsys-1.1.0-TEST.jar
