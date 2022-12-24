@@ -73,7 +73,7 @@ RUN rm -r $INSTALLER_DIR
 
 #Copying application
 WORKDIR /$APP_DIR
-ARG JAR_FILE=build/libs/trik-testsys-2.1.0-TEST.jar
+ARG JAR_FILE=build/libs/trik-testsys-1.1.0-TEST.jar
 ARG APP=app.jar
 COPY $JAR_FILE $APP
 
