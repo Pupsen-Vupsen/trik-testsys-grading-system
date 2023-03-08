@@ -52,6 +52,16 @@ class SubmissionService {
         return submissions
     }
 
+    fun getAllUnprocessedSubmissionsOrNull(): List<Submission>? {
+        val queuedSubmissions = submissionRepository.findSubmissionsByStatus(Status.QUEUED)?: emptyList()
+        val runningSubmissions = submissionRepository.findSubmissionsByStatus(Status.RUNNING)?: emptyList()
+
+        val submissions = queuedSubmissions + runningSubmissions
+
+        if (submissions.isEmpty()) return null
+        return submissions
+    }
+
     fun saveSubmission(taskName: String, studentId: String): Submission {
         val date = LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) +
                 "-" +

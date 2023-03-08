@@ -22,6 +22,14 @@ class TrikUserService : UserDetailsService {
         return trikUserRepository.getByUsername(username)
     }
 
+    fun hasUsers(): Boolean {
+        return trikUserRepository.count() > 0
+    }
+
+    fun countUsers(): Long {
+        return trikUserRepository.count()
+    }
+
     override fun loadUserByUsername(username: String): UserDetails {
         val user = trikUserRepository.getByUsername(username)
             ?: run {
