@@ -1,12 +1,16 @@
 spring:
   jpa:
     hibernate:
-      ddl-auto: update                                         # Update database schema on start if necessary
+      ddl-auto: update                                          # Update database schema on start if necessary
+    open-in-view: on                                            # Enable JPA open-in-view
   datasource:
     url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/testsys_db   # Database URL
     username: testsys                                           # Database username
     password: p@ssw0rd                                          # Database password
     driver-class-name: com.mysql.cj.jdbc.Driver                 # Driver for MySQL
+  h2:
+    console:
+      enabled: off                                              # Disable H2 console
 logging:
   file:
     name: "./logs/server.log"                                   # Path to log file

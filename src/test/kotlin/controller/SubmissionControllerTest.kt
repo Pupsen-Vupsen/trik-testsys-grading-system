@@ -326,7 +326,7 @@ class SubmissionControllerTest {
 
         @Test
         fun `getSubmissionFile should return existing submission file`() {
-            val file = File("src/test/resources/get-submission-file-test_file.qrs")
+            val file = File("src/test/resources/test_files/get_submission_test_files/some-file.qrs")
             Mockito.`when`(submissionService.getSubmissionFileOrNull(1)).thenReturn(file)
 
             mockMvc.perform(
@@ -362,7 +362,7 @@ class SubmissionControllerTest {
 
         @Test
         fun `postSubmission should return json with info about getting not qrs file #1`() {
-            val file = File("src/test/resources/post_submission_test_files/not-qrs-file.txt")
+            val file = File("src/test/resources/test_files/post_submission_test_files/not-qrs-file.txt")
             val multipartFile = MockMultipartFile("file", file.name, "text/plain", file.readBytes())
 
             val submission = createSubmission(
@@ -391,7 +391,7 @@ class SubmissionControllerTest {
 
         @Test
         fun `postSubmission should return json with info about getting not qrs file #2`() {
-            val file = File("src/test/resources/post_submission_test_files/not-qrs-file2.qrs")
+            val file = File("src/test/resources/test_files/post_submission_test_files/not-qrs-file2.qrs")
             val multipartFile = MockMultipartFile("file", file.name, "text/plain", file.readBytes())
 
             val submission = createSubmission(
@@ -420,7 +420,7 @@ class SubmissionControllerTest {
 
         @Test
         fun `postSubmission should return json with info about getting not qrs file #3`() {
-            val file = File("src/test/resources/post_submission_test_files/not-qrs-file3.qrs")
+            val file = File("src/test/resources/test_files/post_submission_test_files/not-qrs-file3.qrs")
             val multipartFile = MockMultipartFile("file", file.name, "text/plain", file.readBytes())
 
             val submission = createSubmission(
@@ -450,7 +450,7 @@ class SubmissionControllerTest {
 
         @Test
         fun `postSubmission should return json with info about getting empty file`() {
-            val file = File("src/test/resources/post_submission_test_files/empty-file.qrs")
+            val file = File("src/test/resources/test_files/post_submission_test_files/empty-file.qrs")
             val multipartFile = MockMultipartFile("file", file.name, "text/plain", file.readBytes())
 
             val submission = createSubmission(
@@ -480,7 +480,7 @@ class SubmissionControllerTest {
         @Test
         fun `postSubmission should return json with info about uploaded submission`() {
             File("./submissions").mkdir()
-            val file = File("src/test/resources/post_submission_test_files/qrs-file.qrs")
+            val file = File("src/test/resources/test_files/post_submission_test_files/qrs-file.qrs")
             val multipartFile = MockMultipartFile("file", file.name, "text/plain", file.readBytes())
 
             val submission = createSubmission(
