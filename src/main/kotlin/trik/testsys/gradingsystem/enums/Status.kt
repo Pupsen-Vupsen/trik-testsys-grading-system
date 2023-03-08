@@ -1,7 +1,8 @@
-package server.enum
+package trik.testsys.gradingsystem.enums
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonValue
+
 
 @JsonFormat(shape = JsonFormat.Shape.NUMBER)
 enum class Status(val code: Int) {

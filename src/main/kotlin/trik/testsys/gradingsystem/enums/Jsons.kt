@@ -1,6 +1,7 @@
-package server.enum
+package trik.testsys.gradingsystem.enums
 
 import com.beust.klaxon.JsonObject
+
 
 object Jsons {
 
@@ -15,7 +16,7 @@ object Jsons {
     val serverErrorJson = JsonObject(
         mapOf(
             "code" to 500,
-            "error_type" to "server",
+            "error_type" to "trik/testsys/gradingsystem",
             "message" to "Something on server went wrong."
         )
     )

@@ -1,9 +1,10 @@
-package server.repository
+package trik.testsys.gradingsystem.repositories
 
-import server.entity.Submission
+import trik.testsys.gradingsystem.entities.Submission
 
 import org.springframework.data.repository.CrudRepository
 import org.springframework.stereotype.Repository
+
 
 @Repository
 interface SubmissionRepository : CrudRepository<Submission, String> {

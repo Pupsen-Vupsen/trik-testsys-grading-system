@@ -1,4 +1,5 @@
-package server.enum
+package trik.testsys.gradingsystem.enums
+
 
 enum class Paths(val text: String) {
 

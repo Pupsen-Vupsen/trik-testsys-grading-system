@@ -1,7 +1,7 @@
-package server.controller
+package trik.testsys.gradingsystem.controllers
 
-import server.service.SubmissionService
-import server.enum.*
+import trik.testsys.gradingsystem.services.SubmissionService
+import trik.testsys.gradingsystem.enums.*
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.io.InputStreamResource
@@ -17,6 +17,7 @@ import java.io.FileInputStream
 
 import com.beust.klaxon.JsonArray
 import com.beust.klaxon.JsonObject
+
 
 @RequestMapping("/v2/grading-system/submissions")
 @RestController

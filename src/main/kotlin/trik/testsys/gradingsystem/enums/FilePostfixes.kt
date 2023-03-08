@@ -1,4 +1,4 @@
-package server.enum
+package trik.testsys.gradingsystem.enums
 
 enum class FilePostfixes(val text: String) {
 

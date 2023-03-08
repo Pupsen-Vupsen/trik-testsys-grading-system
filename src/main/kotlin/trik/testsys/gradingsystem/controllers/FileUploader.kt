@@ -1,13 +1,14 @@
-package server.controller
+package trik.testsys.gradingsystem.controllers
 
 import org.springframework.web.multipart.MultipartFile
 
-import server.enum.FilePostfixes
-import server.enum.Paths
+import trik.testsys.gradingsystem.enums.FilePostfixes
+import trik.testsys.gradingsystem.enums.Paths
 
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
+
 
 class FileUploader(private val file: MultipartFile, private val submissionId: Long) {
 

@@ -1,10 +1,10 @@
 package controller
 
-import server.Application
-import server.entity.Submission
-import server.enum.Jsons
-import server.enum.Status
-import server.service.SubmissionService
+import trik.testsys.Application
+import trik.testsys.gradingsystem.entities.Submission
+import trik.testsys.gradingsystem.enums.Jsons
+import trik.testsys.gradingsystem.enums.Status
+import trik.testsys.gradingsystem.services.SubmissionService
 
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Nested

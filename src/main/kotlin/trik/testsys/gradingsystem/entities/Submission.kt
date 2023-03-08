@@ -1,12 +1,13 @@
-package server.entity
+package trik.testsys.gradingsystem.entities
 
 import com.beust.klaxon.JsonObject
 
 import org.springframework.boot.context.properties.bind.Name
 
-import server.enum.Status
+import trik.testsys.gradingsystem.enums.Status
 
 import javax.persistence.*
+
 
 @Entity
 @Table(name = "SUBMISSIONS")

@@ -43,10 +43,10 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
 
 val jacocoExclude = listOf(
     "**/configuration/**",
-    "**/entity/**",
-    "**/enum/**",
-    "**/repository/**",
-    "**/service/**",
+    "**/entities/**",
+    "**/enums/**",
+    "**/repositories/**",
+    "**/services/**",
     "**/*Application*"
 )
 

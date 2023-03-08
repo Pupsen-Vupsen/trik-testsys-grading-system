@@ -1,10 +1,10 @@
-package server.service
+package trik.testsys.gradingsystem.services
 
 import com.beust.klaxon.Klaxon
 
-import server.entity.Submission
-import server.repository.SubmissionRepository
-import server.enum.*
+import trik.testsys.gradingsystem.entities.Submission
+import trik.testsys.gradingsystem.repositories.SubmissionRepository
+import trik.testsys.gradingsystem.enums.*
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -20,6 +20,7 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.Executor
 import java.util.concurrent.TimeUnit
+
 
 @Service
 @EnableAsync
