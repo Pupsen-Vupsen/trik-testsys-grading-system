@@ -1,17 +1,16 @@
 pull_request_rules:
-  - name: Automatic merge to master on successful build if it's not WIP
-    conditions:
-      - base=master
-      - check-success=build
-      - check-success=test
-      - -title~=(?i)wip
-    actions:
-      merge:
-        method: merge
-      delete_head_branch:
-      assign:
-        add_users:
-          - 5h15h4k1n9
+#  - name: Automatic merge to master on successful build if it's not WIP
+#    conditions:
+#      - base=master
+#      - check-success=build
+#      - check-success=test
+#      - -title~=(?i)wip
+#    actions:
+#      merge:
+#        method: merge
+#      assign:
+#        add_users:
+#          - 5h15h4k1n9
   - name: Add `kotlin` label, if files associated with Kotlin were changed
     conditions:
       - or:
