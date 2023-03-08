@@ -10,6 +10,7 @@ import javax.persistence.*
 
 
 @Entity
+@Table(name = "SUBMISSIONS")
 class Submission(
     @Column(nullable = false)
     @Name("task_name")
@@ -27,6 +28,7 @@ class Submission(
     var id: Long? = null
         private set
 
+    @Enumerated(EnumType.STRING)
     var status = Status.QUEUED
         private set
 
