@@ -10,15 +10,20 @@ import javax.persistence.*
 
 
 @Entity
-@Table(name = "SUBMISSIONS")
 class Submission(
-    @Name("task_name") val taskName: String,
-    @Name("student_id") val studentId: String,
+    @Column(nullable = false)
+    @Name("task_name")
+    val taskName: String,
+
+    @Column(nullable = false)
+    @Name("student_id")
+    val studentId: String,
+
     val date: String
 ) {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "submission_id_generator")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null
         private set
 
