@@ -1,2 +1,2 @@
-rootProject.name = "trik-testsys"
+rootProject.name = "trik-testsys-grading-system"
 
