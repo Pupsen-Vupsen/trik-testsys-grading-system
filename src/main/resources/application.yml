@@ -1,26 +1,18 @@
 spring:
-  datasource:
-    url: jdbc:h2:file:./data/submissions                  # Path to database
-    driver-class-name: org.h2.Driver                     # Database driver
-    username: sa                                         # Username to login
-    password: password                                   # Password to login
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect   # Hibernate dialect
-    defer-datasource-initialization: true                # Initialising database
-    generate-ddl: true                                   # Autogenerate database if it's not exist
-    open-in-view: true                                   # Helps to work in multithreading
-  h2:
-    console:
-      enabled: true                                      # Enabling h2 console
-      path: /h2-console                                  # Path to h2 database console
-      settings:
-        web-allow-others: true                           # Allows getting access to db while application is running
+    hibernate:
+      ddl-auto: update                                         # Update database schema on start if necessary
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/testsys_db   # Database URL
+    username: testsys                                           # Database username
+    password: p@ssw0rd                                          # Database password
+    driver-class-name: com.mysql.cj.jdbc.Driver                 # Driver for MySQL
 logging:
   file:
-    name: "./logs/server.log"                              # Path to log file
+    name: "./logs/server.log"                                   # Path to log file
   logback:
     rollingpolicy:
-      clean-history-on-start: false                      # Not cleaning history on start
-      max-history: 31                                    # Stores a month of logs
+      clean-history-on-start: false                             # Not cleaning history on start
+      max-history: 31                                           # Stores a month of logs
 server:
-  port: 8080                                             # Entrypoint
+  port: 8080                                                    # Entrypoint
