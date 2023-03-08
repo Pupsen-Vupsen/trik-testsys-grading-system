@@ -1,27 +1,22 @@
 package server.controller
 
 import server.service.SubmissionService
-import server.entity.Submission
 import server.enum.*
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.io.InputStreamResource
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import java.io.File
 import java.io.FileInputStream
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
-import java.time.LocalDate
 
 import com.beust.klaxon.JsonArray
 import com.beust.klaxon.JsonObject
-import org.springframework.http.MediaType
 
 @RequestMapping("/v2/grading-system/submissions")
 @RestController
@@ -39,14 +34,13 @@ class SubmissionController {
         val submissionsJson = JsonArray<JsonObject>()
         submissionService.getAllSubmissionsOrNull()?.forEach {
             submissionsJson.add(it.toJsonObject())
-        }
-            ?: run {
-                logger.warn("There are no submissions.")
+        } ?: run {
+            logger.warn("There are no submissions.")
 
-                return ResponseEntity
-                    .status(HttpStatus.OK)
-                    .body(submissionsJson)
-            }
+            return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(submissionsJson)
+        }
 
         logger.info("Returned all submissions.")
         return ResponseEntity
@@ -98,7 +92,7 @@ class SubmissionController {
                 logger.warn("[$id]: There is no submission with this id.")
                 return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
-                    .body(thereIsNoSubmissionJson)
+                    .body(Jsons.thereIsNoSubmissionJson)
             }
 
         logger.info("[$id]: Returned submission status.")
@@ -123,7 +117,7 @@ class SubmissionController {
                 logger.warn("[$id]: There is no submission with this id.")
                 return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
-                    .body(thereIsNoSubmissionJson)
+                    .body(Jsons.thereIsNoSubmissionJson)
             }
 
 
@@ -173,21 +167,19 @@ class SubmissionController {
     fun getSubmissionFile(@RequestParam id: Long): ResponseEntity<Any> {
         logger.info("[$id]: Client requested submission file.")
 
-        val submission = submissionService.getSubmissionOrNull(id)
+        val submissionFile = submissionService.getSubmissionFileOrNull(id)
             ?: run {
                 logger.warn("[$id]: There is no submission with this id.")
                 return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
-                    .body(thereIsNoSubmissionJson)
+                    .body(Jsons.thereIsNoSubmissionJson)
             }
 
-        val submissionFilePath = Paths.SUBMISSIONS.text + "${submission.id}/submission" + FilePostfixes.QRS.text
-
         val stream = try {
-            InputStreamResource(FileInputStream(File(submissionFilePath)))
+            InputStreamResource(FileInputStream(submissionFile))
         } catch (e: Exception) {
             logger.error("[$id]: Caught exception while returning file: ${e.stackTraceToString()}!")
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(serverErrorJson)
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Jsons.serverErrorJson)
         }
 
         logger.info("[$id]: Returned submission file.")
@@ -206,11 +198,8 @@ class SubmissionController {
         @RequestBody file: MultipartFile
     ): ResponseEntity<JsonObject> {
         logger.info("Got file!")
-        val date = LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) +
-                "-" +
-                LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
 
-        val submission = submissionService.saveSubmission(Submission(taskName, studentId, date))
+        val submission = submissionService.saveSubmission(taskName, studentId)
         val submissionId = submission.id!!
         val fileUploader = FileUploader(file, submissionId)
         return try {
@@ -227,7 +216,7 @@ class SubmissionController {
                         "status" to submission.status,
                         "student_id" to submission.studentId,
                         "task_name" to taskName,
-                        "date" to date
+                        "date" to submission.date
                     )
                 )
                 ResponseEntity
@@ -236,11 +225,11 @@ class SubmissionController {
             } else {
                 logger.warn("[$submissionId]: Uploading file is empty or not .qrs file.")
 
-                submission.changeStatus(Status.ERROR)
+                submission.changeStatus(Status.FAILED)
                 submissionService.saveSubmission(submission)
                 ResponseEntity
                     .status(HttpStatus.UNPROCESSABLE_ENTITY)
-                    .body(uploadingFileEmptyOrNotQrsJson)
+                    .body(Jsons.uploadingFileEmptyOrNotQrsJson)
             }
         } catch (e: Exception) {
             logger.error("[${submissionId}]: Caught exception while uploading file: ${e.stackTraceToString()}!")
@@ -249,7 +238,7 @@ class SubmissionController {
             submissionService.saveSubmission(submission)
             ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(serverErrorJson)
+                .body(Jsons.serverErrorJson)
         }
     }
 
@@ -262,15 +251,15 @@ class SubmissionController {
                 logger.warn("[$id]: There is no submission with this id.")
                 return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
-                    .body(thereIsNoSubmissionJson)
+                    .body(Jsons.thereIsNoSubmissionJson)
             }
 
-        /*if (submission.status == Status.QUEUED || submission.status == Status.RUNNING) {
+        if (submission.status == Status.QUEUED || submission.status == Status.RUNNING) {
             logger.warn("[$id]: Submission is queued or testing.")
             return ResponseEntity
                 .status(HttpStatus.METHOD_NOT_ALLOWED)
-                .body(submissionIsNotTestedYetJson)
-        }*/
+                .body(Jsons.submissionIsNotTestedYetJson)
+        }
 
         submissionService.refreshSubmission(submission)
         submissionService.prepareForTesting(submission)
@@ -293,43 +282,39 @@ class SubmissionController {
             .body(submissionJson)
     }
 
-    private val thereIsNoSubmissionJson = JsonObject(
-        mapOf(
-            "code" to 404,
-            "error_type" to "client",
-            "message" to "There is no submission with this id."
-        )
-    )
+    // TODO: Add to documentation
+    @PatchMapping("/recheck")
+    fun recheckArraySubmissions(@RequestParam id_array: List<Long>): ResponseEntity<JsonArray<Any>> {
+        logger.info("Client requested recheck submissions.")
 
-    private val serverErrorJson = JsonObject(
-        mapOf(
-            "code" to 500,
-            "error_type" to "server",
-            "message" to "Something on server went wrong."
-        )
-    )
+        val submissionStatuses = mutableMapOf<Long, Int?>()
 
-    private val uploadingFileEmptyOrNotQrsJson = JsonObject(
-        mapOf(
-            "code" to 422,
-            "error_type" to "client",
-            "message" to "Uploading file is empty or not .qrs."
-        )
-    )
+        id_array.forEach { id ->
+            val submission = submissionService.getSubmissionOrNull(id)
+                ?: run {
+                    logger.warn("[$id]: There is no submission with this id.")
+                    submissionStatuses[id] = null
+                    return@forEach
+                }
 
-    private val submissionHasErrorJson = JsonObject(
-        mapOf(
-            "code" to 422,
-            "error_type" to "client",
-            "message" to "Submission has error."
-        )
-    )
+            if (submission.status == Status.QUEUED || submission.status == Status.RUNNING) {
+                logger.warn("[$id]: Submission is queued or testing.")
+                submissionStatuses[id] = submission.status.code
+                return@forEach
+            }
+            submissionService.refreshSubmission(submission)
+            submissionService.prepareForTesting(submission)
+            submissionService.testSubmission(submission)
 
-    private val submissionIsNotTestedYetJson = JsonObject(
-        mapOf(
-            "code" to 405,
-            "error_type" to "client",
-            "message" to "Submission is not tested yet."
-        )
-    )
+            submissionStatuses[id] = submission.status.code
+
+            logger.info("[$id]: Saved rechecking submission.")
+        }
+
+        val submissionsJson = convertFromMutableMapToJsonArray(submissionStatuses)
+
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(submissionsJson)
+    }
 }

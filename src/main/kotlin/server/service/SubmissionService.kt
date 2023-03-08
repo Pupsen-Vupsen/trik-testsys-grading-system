@@ -15,6 +15,9 @@ import org.springframework.stereotype.Service
 
 import java.io.File
 import java.security.MessageDigest
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import java.util.concurrent.Executor
 import java.util.concurrent.TimeUnit
 
@@ -32,10 +35,29 @@ class SubmissionService {
 
     fun getSubmissionOrNull(id: Long) = submissionRepository.findSubmissionById(id)
 
+    fun getSubmissionFileOrNull(id: Long): File? {
+        val submission = getSubmissionOrNull(id)
+
+        return if (submission != null) {
+            File(Paths.SUBMISSIONS.text + "${submission.id}/submission" + FilePostfixes.QRS.text)
+        } else {
+            null
+        }
+    }
+
     fun getAllSubmissionsOrNull(): List<Submission>? {
         val submissions = submissionRepository.findAll().toList()
         if (submissions.isEmpty()) return null
         return submissions
+    }
+
+    fun saveSubmission(taskName: String, studentId: String): Submission {
+        val date = LocalDate.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")) +
+                "-" +
+                LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+        val submission = Submission(taskName, studentId, date)
+
+        return submissionRepository.save(submission)
     }
 
     fun saveSubmission(submission: Submission): Submission {

@@ -18,7 +18,8 @@ class Submission(
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "submission_id_generator")
-    val id: Long? = null
+    var id: Long? = null
+        private set
 
     var status = Status.QUEUED
         private set
