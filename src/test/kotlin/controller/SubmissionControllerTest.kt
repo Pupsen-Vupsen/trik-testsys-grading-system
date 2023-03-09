@@ -1,12 +1,7 @@
 package controller
 
-import trik.testsys.Application
-import trik.testsys.gradingsystem.entities.Submission
-import trik.testsys.gradingsystem.enums.Jsons
-import trik.testsys.gradingsystem.enums.Status
-import trik.testsys.gradingsystem.services.SubmissionService
 
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
@@ -16,14 +11,23 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.http.MediaType
 import org.springframework.mock.web.MockMultipartFile
+import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 
+import trik.testsys.Application
+import trik.testsys.gradingsystem.entities.Submission
+import trik.testsys.gradingsystem.enums.Jsons
+import trik.testsys.gradingsystem.enums.Status
+import trik.testsys.gradingsystem.services.SubmissionService
+
 import java.io.File
+
 
 @SpringBootTest(classes = [Application::class])
 @AutoConfigureMockMvc
+@WithMockUser(username = "accessUser1", password = "super", roles = ["USER"])
 class SubmissionControllerTest {
 
     @Autowired
@@ -631,7 +635,8 @@ class SubmissionControllerTest {
             Mockito.`when`(submissionService.getSubmissionOrNull(submission3.id!!)).thenReturn(submission3)
             Mockito.`when`(submissionService.getSubmissionOrNull(4)).thenReturn(null)
 
-            Mockito.`when`(submissionService.testSubmission(submission1)).then { submission1.changeStatus(Status.QUEUED) }
+            Mockito.`when`(submissionService.testSubmission(submission1))
+                .then { submission1.changeStatus(Status.QUEUED) }
 
             mockMvc.perform(
                 patch("/v2/grading-system/submissions/recheck")

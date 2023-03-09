@@ -31,6 +31,7 @@ dependencies {
     implementation("com.beust:klaxon:5.6")
 
     implementation("com.h2database:h2")
+    testImplementation("org.springframework.security:spring-security-test")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.0")
     testImplementation(platform("org.junit:junit-bom:5.9.0"))
