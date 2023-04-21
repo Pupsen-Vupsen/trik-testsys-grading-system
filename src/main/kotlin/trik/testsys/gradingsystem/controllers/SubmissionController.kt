@@ -17,6 +17,8 @@ import java.io.FileInputStream
 
 import com.beust.klaxon.JsonArray
 import com.beust.klaxon.JsonObject
+import java.io.File
+import java.io.FileWriter
 
 
 @RequestMapping("/v2/grading-system/submissions")
@@ -285,12 +287,12 @@ class SubmissionController {
 
     // TODO: Add to documentation
     @PatchMapping("/recheck")
-    fun recheckArraySubmissions(@RequestParam id_array: List<Long>): ResponseEntity<JsonArray<Any>> {
+    fun recheckArraySubmissions(@RequestParam("idArray") idArray: List<Long>): ResponseEntity<JsonArray<Any>> {
         logger.info("Client requested recheck submissions.")
 
         val submissionStatuses = mutableMapOf<Long, Int?>()
 
-        id_array.forEach { id ->
+        idArray.forEach { id ->
             val submission = submissionService.getSubmissionOrNull(id)
                 ?: run {
                     logger.warn("[$id]: There is no submission with this id.")
@@ -317,5 +319,47 @@ class SubmissionController {
         return ResponseEntity
             .status(HttpStatus.OK)
             .body(submissionsJson)
+    }
+
+    //  Returns csv file with header: id, student_id, task_name, date, status, using pure kotlin
+    @GetMapping("/info/table")
+    fun getCsvResultsFile(): ResponseEntity<InputStreamResource> {
+        logger.info("Client requested csv results file.")
+
+        val processedSubmissions = submissionService.getAllProcessedSubmissionsOrNull()
+
+        val csvFile = File("results.csv")
+        val csvWriter = FileWriter(csvFile)
+        val header = arrayOf("id", "student_id", "task_name", "date", "status")
+
+        header.forEach {
+            csvWriter.write(it)
+            csvWriter.write(",")
+        }
+        csvWriter.write("\n")
+
+        processedSubmissions?.forEach { submission ->
+            val row = arrayOf(
+                submission.id,
+                submission.studentId,
+                submission.taskName,
+                submission.date,
+                submission.status
+            )
+
+            row.forEach {
+                csvWriter.write(it.toString())
+                csvWriter.write(",")
+            }
+            csvWriter.write("\n")
+        }
+        csvWriter.close()
+
+        val stream = InputStreamResource(FileInputStream(csvFile))
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .contentType(MediaType.APPLICATION_OCTET_STREAM)
+            .header("Content-Disposition", "attachment; filename=\"results.csv\"")
+            .body(stream)
     }
 }

@@ -640,7 +640,7 @@ class SubmissionControllerTest {
 
             mockMvc.perform(
                 patch("/v2/grading-system/submissions/recheck")
-                    .param("id_array", "1,2,3,4")
+                    .param("idArray", "1,2,3,4")
             )
                 .andExpect(status().isOk)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))

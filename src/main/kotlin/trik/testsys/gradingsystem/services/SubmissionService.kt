@@ -53,10 +53,18 @@ class SubmissionService {
     }
 
     fun getAllUnprocessedSubmissionsOrNull(): List<Submission>? {
-        val queuedSubmissions = submissionRepository.findSubmissionsByStatus(Status.QUEUED)?: emptyList()
-        val runningSubmissions = submissionRepository.findSubmissionsByStatus(Status.RUNNING)?: emptyList()
+        val submissions = submissionRepository.findAll().toList().filter {
+            it.status == Status.QUEUED || it.status == Status.RUNNING
+        }
 
-        val submissions = queuedSubmissions + runningSubmissions
+        if (submissions.isEmpty()) return null
+        return submissions
+    }
+
+    fun getAllProcessedSubmissionsOrNull(): List<Submission>? {
+        val submissions = submissionRepository.findAll().toList().filter {
+            it.status == Status.ACCEPTED || it.status == Status.FAILED || it.status == Status.ERROR
+        }
 
         if (submissions.isEmpty()) return null
         return submissions
