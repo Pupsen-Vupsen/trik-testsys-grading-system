@@ -483,7 +483,7 @@ class SubmissionControllerTest {
 
         @Test
         fun `postSubmission should return json with info about uploaded submission`() {
-            File("/submissions").mkdir()
+            File("./submissions").mkdir()
             val file = File("src/test/resources/test_files/post_submission_test_files/qrs-file.qrs")
             val multipartFile = MockMultipartFile("file", file.name, "text/plain", file.readBytes())
 
@@ -502,6 +502,7 @@ class SubmissionControllerTest {
                     .param("task_name", submission.taskName)
                     .param("student_id", submission.studentId)
             )
+                .andExpect(status().isOk)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("\$").isNotEmpty)
 
@@ -511,7 +512,7 @@ class SubmissionControllerTest {
                 .andExpect(jsonPath("\$.task_name").value(submission.taskName))
                 .andExpect(jsonPath("\$.date").value(submission.date))
 
-            File("/submissions").deleteRecursively()
+            File("./submissions").deleteRecursively()
         }
     }
 
