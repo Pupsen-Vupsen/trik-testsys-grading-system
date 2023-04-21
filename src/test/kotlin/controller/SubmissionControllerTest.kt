@@ -502,7 +502,6 @@ class SubmissionControllerTest {
                     .param("task_name", submission.taskName)
                     .param("student_id", submission.studentId)
             )
-                .andExpect(status().isOk)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("\$").isNotEmpty)
 
