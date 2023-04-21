@@ -43,6 +43,7 @@ class TaskController {
             Files.write(File(filePath).toPath(), fileBytes)
         }
 
+        logger.info("Task $taskName created successfully. Count of tests: ${files.size}.")
         return ResponseEntity
             .status(HttpStatus.OK)
             .body(

@@ -13,7 +13,7 @@ spring:
       enabled: off                                              # Disable H2 console
 logging:
   file:
-    name: "./logs/server.log"                                   # Path to log file
+    name: "/logs/server.log"                                   # Path to log file
   logback:
     rollingpolicy:
       clean-history-on-start: false                             # Not cleaning history on start
