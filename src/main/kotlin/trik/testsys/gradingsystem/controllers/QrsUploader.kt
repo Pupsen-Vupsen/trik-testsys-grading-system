@@ -10,7 +10,7 @@ import java.io.File
 import java.io.FileOutputStream
 
 
-class FileUploader(private val file: MultipartFile, private val submissionId: Long) {
+class QrsUploader(private val file: MultipartFile, private val submissionId: Long) {
 
     fun upload(): Boolean {
         if (file.isEmpty) return false

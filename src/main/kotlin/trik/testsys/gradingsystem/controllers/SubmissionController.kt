@@ -204,9 +204,9 @@ class SubmissionController {
 
         val submission = submissionService.saveSubmission(taskName, studentId)
         val submissionId = submission.id!!
-        val fileUploader = FileUploader(file, submissionId)
+        val qrsUploader = QrsUploader(file, submissionId)
         return try {
-            if (fileUploader.upload()) {
+            if (qrsUploader.upload()) {
                 logger.info("[${submissionId}]: Set id to new file.")
                 submissionService.prepareForTesting(submission)
                 submissionService.testSubmission(submission)

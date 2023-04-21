@@ -16,7 +16,7 @@ object Jsons {
     val serverErrorJson = JsonObject(
         mapOf(
             "code" to 500,
-            "error_type" to "trik/testsys/gradingsystem",
+            "error_type" to "server",
             "message" to "Something on server went wrong."
         )
     )
@@ -26,6 +26,14 @@ object Jsons {
             "code" to 422,
             "error_type" to "client",
             "message" to "Uploading file is empty or not .qrs."
+        )
+    )
+
+    val conflictTaskNameJson = JsonObject(
+        mapOf(
+            "code" to 409,
+            "error_type" to "client",
+            "message" to "Task name is already exists."
         )
     )
 
