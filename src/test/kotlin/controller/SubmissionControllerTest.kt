@@ -46,7 +46,7 @@ class SubmissionControllerTest {
 
         @Test
         fun `getAllSubmissions should return empty list if there are no submissions`() {
-            mockMvc.perform(get("/v2/grading-system/submissions/info/all"))
+            mockMvc.perform(get("/v3/grading-system/submissions/info/all"))
                 .andExpect(status().isOk)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("\$").isArray)
@@ -82,7 +82,7 @@ class SubmissionControllerTest {
 
             Mockito.`when`(submissionService.getAllSubmissionsOrNull()).thenReturn(expectedSubmissionsList)
 
-            mockMvc.perform(get("/v2/grading-system/submissions/info/all"))
+            mockMvc.perform(get("/v3/grading-system/submissions/info/all"))
                 .andExpect(status().isOk)
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("\$").isArray)
@@ -121,7 +121,7 @@ class SubmissionControllerTest {
         Mockito.`when`(submissionService.getSubmissionOrNull(4)).thenReturn(null)
 
         mockMvc.perform(
-            get("/v2/grading-system/submissions/status")
+            get("/v3/grading-system/submissions/status")
                 .param("id_array", "1", "2", "3", "4")
         )
             .andExpect(status().isOk)
@@ -149,7 +149,7 @@ class SubmissionControllerTest {
             Mockito.`when`(submissionService.getSubmissionOrNull(1)).thenReturn(null)
 
             mockMvc.perform(
-                get("/v2/grading-system/submissions/submission/status")
+                get("/v3/grading-system/submissions/submission/status")
                     .param("id", "1")
             )
                 .andExpect(status().isNotFound)
@@ -167,7 +167,7 @@ class SubmissionControllerTest {
             Mockito.`when`(submissionService.getSubmissionOrNull(1)).thenReturn(submission)
 
             mockMvc.perform(
-                get("/v2/grading-system/submissions/submission/status")
+                get("/v3/grading-system/submissions/submission/status")
                     .param("id", "1")
             )
                 .andExpect(status().isOk)
@@ -186,7 +186,7 @@ class SubmissionControllerTest {
             Mockito.`when`(submissionService.getSubmissionOrNull(1)).thenReturn(null)
 
             mockMvc.perform(
-                get("/v2/grading-system/submissions/submission/info")
+                get("/v3/grading-system/submissions/submission/info")
                     .param("id", "1")
             )
                 .andExpect(status().isNotFound)
@@ -215,7 +215,7 @@ class SubmissionControllerTest {
             Mockito.`when`(submissionService.getSubmissionOrNull(1)).thenReturn(submission)
 
             mockMvc.perform(
-                get("/v2/grading-system/submissions/submission/info")
+                get("/v3/grading-system/submissions/submission/info")
                     .param("id", "1")
             )
                 .andExpect(status().isOk)
@@ -264,7 +264,7 @@ class SubmissionControllerTest {
         Mockito.`when`(submissionService.getSubmissionOrNull(4)).thenReturn(null)
 
         mockMvc.perform(
-            get("/v2/grading-system/submissions/info")
+            get("/v3/grading-system/submissions/info")
                 .param("id_array", "1", "2", "3", "4")
         )
             .andExpect(status().isOk)
@@ -316,7 +316,7 @@ class SubmissionControllerTest {
             Mockito.`when`(submissionService.getSubmissionFileOrNull(1)).thenReturn(null)
 
             mockMvc.perform(
-                get("/v2/grading-system/submissions/submission/download")
+                get("/v3/grading-system/submissions/submission/download")
                     .param("id", "1")
             )
                 .andExpect(status().isNotFound)
@@ -334,7 +334,7 @@ class SubmissionControllerTest {
             Mockito.`when`(submissionService.getSubmissionFileOrNull(1)).thenReturn(file)
 
             mockMvc.perform(
-                get("/v2/grading-system/submissions/submission/download")
+                get("/v3/grading-system/submissions/submission/download")
                     .param("id", "1")
             )
                 .andExpect(status().isOk)
@@ -348,7 +348,7 @@ class SubmissionControllerTest {
             Mockito.`when`(submissionService.getSubmissionFileOrNull(1)).thenReturn(nonExistingFile)
 
             mockMvc.perform(
-                get("/v2/grading-system/submissions/submission/download")
+                get("/v3/grading-system/submissions/submission/download")
                     .param("id", "1")
             )
                 .andExpect(status().isInternalServerError)
@@ -379,7 +379,7 @@ class SubmissionControllerTest {
                 .thenReturn(submission)
 
             mockMvc.perform(
-                multipart("/v2/grading-system/submissions/submission/upload")
+                multipart("/v3/grading-system/submissions/submission/upload")
                     .file(multipartFile)
                     .param("task_name", submission.taskName)
                     .param("student_id", submission.studentId)
@@ -408,7 +408,7 @@ class SubmissionControllerTest {
                 .thenReturn(submission)
 
             mockMvc.perform(
-                multipart("/v2/grading-system/submissions/submission/upload")
+                multipart("/v3/grading-system/submissions/submission/upload")
                     .file(multipartFile)
                     .param("task_name", submission.taskName)
                     .param("student_id", submission.studentId)
@@ -437,7 +437,7 @@ class SubmissionControllerTest {
                 .thenReturn(submission)
 
             mockMvc.perform(
-                multipart("/v2/grading-system/submissions/submission/upload")
+                multipart("/v3/grading-system/submissions/submission/upload")
                     .file(multipartFile)
                     .param("task_name", submission.taskName)
                     .param("student_id", submission.studentId)
@@ -467,7 +467,7 @@ class SubmissionControllerTest {
                 .thenReturn(submission)
 
             mockMvc.perform(
-                multipart("/v2/grading-system/submissions/submission/upload")
+                multipart("/v3/grading-system/submissions/submission/upload")
                     .file(multipartFile)
                     .param("task_name", submission.taskName)
                     .param("student_id", submission.studentId)
@@ -497,7 +497,7 @@ class SubmissionControllerTest {
                 .thenReturn(submission)
 
             mockMvc.perform(
-                multipart("/v2/grading-system/submissions/submission/upload")
+                multipart("/v3/grading-system/submissions/submission/upload")
                     .file(multipartFile)
                     .param("task_name", submission.taskName)
                     .param("student_id", submission.studentId)
@@ -524,7 +524,7 @@ class SubmissionControllerTest {
             Mockito.`when`(submissionService.getSubmissionOrNull(1)).thenReturn(null)
 
             mockMvc.perform(
-                patch("/v2/grading-system/submissions/submission/recheck")
+                patch("/v3/grading-system/submissions/submission/recheck")
                     .param("id", "1")
             )
                 .andExpect(status().isNotFound)
@@ -549,7 +549,7 @@ class SubmissionControllerTest {
             Mockito.`when`(submissionService.getSubmissionOrNull(submission.id!!)).thenReturn(submission)
 
             mockMvc.perform(
-                patch("/v2/grading-system/submissions/submission/recheck")
+                patch("/v3/grading-system/submissions/submission/recheck")
                     .param("id", "1")
             )
                 .andExpect(status().isMethodNotAllowed)
@@ -574,7 +574,7 @@ class SubmissionControllerTest {
             Mockito.`when`(submissionService.getSubmissionOrNull(submission.id!!)).thenReturn(submission)
 
             mockMvc.perform(
-                patch("/v2/grading-system/submissions/submission/recheck")
+                patch("/v3/grading-system/submissions/submission/recheck")
                     .param("id", "1")
             )
                 .andExpect(status().isMethodNotAllowed)
@@ -600,7 +600,7 @@ class SubmissionControllerTest {
             Mockito.`when`(submissionService.testSubmission(submission)).then { submission.changeStatus(Status.QUEUED) }
 
             mockMvc.perform(
-                patch("/v2/grading-system/submissions/submission/recheck")
+                patch("/v3/grading-system/submissions/submission/recheck")
                     .param("id", "1")
             )
                 .andExpect(status().isOk)
@@ -639,7 +639,7 @@ class SubmissionControllerTest {
                 .then { submission1.changeStatus(Status.QUEUED) }
 
             mockMvc.perform(
-                patch("/v2/grading-system/submissions/recheck")
+                patch("/v3/grading-system/submissions/recheck")
                     .param("idArray", "1,2,3,4")
             )
                 .andExpect(status().isOk)

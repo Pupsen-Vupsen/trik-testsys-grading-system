@@ -21,7 +21,7 @@ import java.io.File
 import java.io.FileWriter
 
 
-@RequestMapping("/v2/grading-system/submissions")
+@RequestMapping("/v3/grading-system/submissions")
 @RestController
 class SubmissionController {
 
