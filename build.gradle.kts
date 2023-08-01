@@ -11,6 +11,7 @@ group = "Pupsen&Vupsen"
 version = "3.0.0"
 java.sourceCompatibility = JavaVersion.VERSION_16
 
+
 repositories {
     mavenCentral()
 }
@@ -29,6 +30,13 @@ dependencies {
     runtimeOnly("mysql:mysql-connector-java")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("com.beust:klaxon:5.6")
+
+    //implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+
+    implementation("io.ktor:ktor-client-core:1.6.8")
+    implementation("io.ktor:ktor-client-cio:1.6.8")
+    //implementation("io.ktor:ktor-client-java:1.6.8")
+    //implementation("io.ktor:ktor-client-curl:1.6.8")
 
     implementation("com.h2database:h2")
     testImplementation("org.springframework.security:spring-security-test")

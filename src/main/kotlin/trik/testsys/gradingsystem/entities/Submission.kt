@@ -14,7 +14,7 @@ import javax.persistence.*
 class Submission(
     @Column(nullable = false)
     @Name("task_name")
-    val taskName: String,
+    val taskNamePrefix: String,
 
     @Column(nullable = false)
     @Name("student_id")
@@ -59,7 +59,7 @@ class Submission(
         return JsonObject(
             mapOf(
                 "id" to id,
-                "task_name" to taskName,
+                "task_name" to taskNamePrefix,
                 "student_id" to studentId,
                 "date" to date,
                 "status" to status,

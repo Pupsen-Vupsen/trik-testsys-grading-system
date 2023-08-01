@@ -89,7 +89,7 @@ class SubmissionControllerTest {
                 .andExpect(jsonPath("\$").isNotEmpty)
 
                 .andExpect(jsonPath("\$[0].id").value(submission1.id))
-                .andExpect(jsonPath("\$[0].task_name").value(submission1.taskName))
+                .andExpect(jsonPath("\$[0].task_name").value(submission1.taskNamePrefix))
                 .andExpect(jsonPath("\$[0].student_id").value(submission1.studentId))
                 .andExpect(jsonPath("\$[0].date").value(submission1.date))
                 .andExpect(jsonPath("\$[0].status").value(submission1.status.code))
@@ -99,7 +99,7 @@ class SubmissionControllerTest {
                 .andExpect(jsonPath("\$[0].trik_message").value(submission1.trikMessage))
 
                 .andExpect(jsonPath("\$[1].id").value(submission2.id))
-                .andExpect(jsonPath("\$[1].task_name").value(submission2.taskName))
+                .andExpect(jsonPath("\$[1].task_name").value(submission2.taskNamePrefix))
                 .andExpect(jsonPath("\$[1].student_id").value(submission2.studentId))
                 .andExpect(jsonPath("\$[1].date").value(submission2.date))
                 .andExpect(jsonPath("\$[1].status").value(submission2.status.code))
@@ -223,7 +223,7 @@ class SubmissionControllerTest {
                 .andExpect(jsonPath("\$").isNotEmpty)
 
                 .andExpect(jsonPath("\$.id").value(submission.id))
-                .andExpect(jsonPath("\$.task_name").value(submission.taskName))
+                .andExpect(jsonPath("\$.task_name").value(submission.taskNamePrefix))
                 .andExpect(jsonPath("\$.student_id").value(submission.studentId))
                 .andExpect(jsonPath("\$.date").value(submission.date))
                 .andExpect(jsonPath("\$.status").value(submission.status.code))
@@ -272,7 +272,7 @@ class SubmissionControllerTest {
             .andExpect(jsonPath("\$").isNotEmpty)
 
             .andExpect(jsonPath("\$[0].id").value(submission1.id))
-            .andExpect(jsonPath("\$[0].task_name").value(submission1.taskName))
+            .andExpect(jsonPath("\$[0].task_name").value(submission1.taskNamePrefix))
             .andExpect(jsonPath("\$[0].student_id").value(submission1.studentId))
             .andExpect(jsonPath("\$[0].date").value(submission1.date))
             .andExpect(jsonPath("\$[0].status").value(submission1.status.code))
@@ -290,7 +290,7 @@ class SubmissionControllerTest {
             .andExpect(jsonPath("\$[1].trik_message").value(null))
 
             .andExpect(jsonPath("\$[2].id").value(submission3.id))
-            .andExpect(jsonPath("\$[2].task_name").value(submission3.taskName))
+            .andExpect(jsonPath("\$[2].task_name").value(submission3.taskNamePrefix))
             .andExpect(jsonPath("\$[2].student_id").value(submission3.studentId))
             .andExpect(jsonPath("\$[2].date").value(submission3.date))
             .andExpect(jsonPath("\$[2].status").value(submission3.status.code))
@@ -375,13 +375,13 @@ class SubmissionControllerTest {
                 studentId = "student1",
             )
 
-            Mockito.`when`(submissionService.saveSubmission(submission.taskName, submission.studentId))
+            Mockito.`when`(submissionService.saveSubmission(submission.taskNamePrefix, submission.studentId))
                 .thenReturn(submission)
 
             mockMvc.perform(
                 multipart("/v3/grading-system/submissions/submission/upload")
                     .file(multipartFile)
-                    .param("task_name", submission.taskName)
+                    .param("task_name", submission.taskNamePrefix)
                     .param("student_id", submission.studentId)
             )
                 .andExpect(status().isUnprocessableEntity)
@@ -404,13 +404,13 @@ class SubmissionControllerTest {
                 studentId = "student1",
             )
 
-            Mockito.`when`(submissionService.saveSubmission(submission.taskName, submission.studentId))
+            Mockito.`when`(submissionService.saveSubmission(submission.taskNamePrefix, submission.studentId))
                 .thenReturn(submission)
 
             mockMvc.perform(
                 multipart("/v3/grading-system/submissions/submission/upload")
                     .file(multipartFile)
-                    .param("task_name", submission.taskName)
+                    .param("task_name", submission.taskNamePrefix)
                     .param("student_id", submission.studentId)
             )
                 .andExpect(status().isUnprocessableEntity)
@@ -433,13 +433,13 @@ class SubmissionControllerTest {
                 studentId = "student1",
             )
 
-            Mockito.`when`(submissionService.saveSubmission(submission.taskName, submission.studentId))
+            Mockito.`when`(submissionService.saveSubmission(submission.taskNamePrefix, submission.studentId))
                 .thenReturn(submission)
 
             mockMvc.perform(
                 multipart("/v3/grading-system/submissions/submission/upload")
                     .file(multipartFile)
-                    .param("task_name", submission.taskName)
+                    .param("task_name", submission.taskNamePrefix)
                     .param("student_id", submission.studentId)
             )
                 .andExpect(status().isUnprocessableEntity)
@@ -463,13 +463,13 @@ class SubmissionControllerTest {
                 studentId = "student1",
             )
 
-            Mockito.`when`(submissionService.saveSubmission(submission.taskName, submission.studentId))
+            Mockito.`when`(submissionService.saveSubmission(submission.taskNamePrefix, submission.studentId))
                 .thenReturn(submission)
 
             mockMvc.perform(
                 multipart("/v3/grading-system/submissions/submission/upload")
                     .file(multipartFile)
-                    .param("task_name", submission.taskName)
+                    .param("task_name", submission.taskNamePrefix)
                     .param("student_id", submission.studentId)
             )
                 .andExpect(status().isUnprocessableEntity)
@@ -493,13 +493,13 @@ class SubmissionControllerTest {
                 studentId = "student1",
             )
 
-            Mockito.`when`(submissionService.saveSubmission(submission.taskName, submission.studentId))
+            Mockito.`when`(submissionService.saveSubmission(submission.taskNamePrefix, submission.studentId))
                 .thenReturn(submission)
 
             mockMvc.perform(
                 multipart("/v3/grading-system/submissions/submission/upload")
                     .file(multipartFile)
-                    .param("task_name", submission.taskName)
+                    .param("task_name", submission.taskNamePrefix)
                     .param("student_id", submission.studentId)
             )
                 .andExpect(status().isOk)
@@ -509,7 +509,7 @@ class SubmissionControllerTest {
                 .andExpect(jsonPath("\$.id").value(submission.id))
                 .andExpect(jsonPath("\$.status").value(submission.status.code))
                 .andExpect(jsonPath("\$.student_id").value(submission.studentId))
-                .andExpect(jsonPath("\$.task_name").value(submission.taskName))
+                .andExpect(jsonPath("\$.task_name").value(submission.taskNamePrefix))
                 .andExpect(jsonPath("\$.date").value(submission.date))
 
             File("/submissions").deleteRecursively()
@@ -610,7 +610,7 @@ class SubmissionControllerTest {
                 .andExpect(jsonPath("\$.id").value(submission.id))
                 .andExpect(jsonPath("\$.status").value(submission.status.code))
                 .andExpect(jsonPath("\$.student_id").value(submission.studentId))
-                .andExpect(jsonPath("\$.task_name").value(submission.taskName))
+                .andExpect(jsonPath("\$.task_name").value(submission.taskNamePrefix))
                 .andExpect(jsonPath("\$.date").value(submission.date))
 
         }

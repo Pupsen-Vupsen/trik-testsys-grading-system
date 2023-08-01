@@ -1,23 +1,20 @@
 package trik.testsys.gradingsystem.controllers
 
-import trik.testsys.gradingsystem.services.SubmissionService
-import trik.testsys.gradingsystem.enums.*
-
+import com.beust.klaxon.JsonArray
+import com.beust.klaxon.JsonObject
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.io.InputStreamResource
 import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
 import org.springframework.http.MediaType
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-
-import java.io.FileInputStream
-
-import com.beust.klaxon.JsonArray
-import com.beust.klaxon.JsonObject
+import trik.testsys.gradingsystem.enums.*
+import trik.testsys.gradingsystem.services.SubmissionService
 import java.io.File
+import java.io.FileInputStream
 import java.io.FileWriter
 
 
@@ -195,7 +192,7 @@ class SubmissionController {
     }
 
     @PostMapping("/submission/upload")
-    fun postSubmission(
+    suspend fun postSubmission(
         @RequestParam("task_name") taskName: String,
         @RequestParam("student_id") studentId: String,
         @RequestBody file: MultipartFile
@@ -208,7 +205,6 @@ class SubmissionController {
         return try {
             if (qrsUploader.upload()) {
                 logger.info("[${submissionId}]: Set id to new file.")
-                submissionService.prepareForTesting(submission)
                 submissionService.testSubmission(submission)
 
                 logger.info("[${submissionId}]: Saved submission.")
@@ -246,7 +242,7 @@ class SubmissionController {
     }
 
     @PatchMapping("/submission/recheck")
-    fun recheckSubmission(@RequestParam id: Long): ResponseEntity<JsonObject> {
+    suspend fun recheckSubmission(@RequestParam id: Long): ResponseEntity<JsonObject> {
         logger.info("[$id]: Client requested recheck submission.")
 
         val submission = submissionService.getSubmissionOrNull(id)
@@ -265,9 +261,6 @@ class SubmissionController {
         }
 
         submissionService.refreshSubmission(submission)
-        submissionService.prepareForTesting(submission)
-        submissionService.testSubmission(submission)
-
 
         logger.info("[$id]: Saved rechecking submission.")
 
@@ -276,7 +269,7 @@ class SubmissionController {
                 "id" to submission.id,
                 "status" to submission.status,
                 "student_id" to submission.studentId,
-                "task_name" to submission.taskName,
+                "task_name" to submission.taskNamePrefix,
                 "date" to submission.date
             )
         )
@@ -287,7 +280,7 @@ class SubmissionController {
 
     // TODO: Add to documentation
     @PatchMapping("/recheck")
-    fun recheckArraySubmissions(@RequestParam("idArray") idArray: List<Long>): ResponseEntity<JsonArray<Any>> {
+    suspend fun recheckArraySubmissions(@RequestParam("idArray") idArray: List<Long>): ResponseEntity<JsonArray<Any>> {
         logger.info("Client requested recheck submissions.")
 
         val submissionStatuses = mutableMapOf<Long, Int?>()
@@ -306,8 +299,6 @@ class SubmissionController {
                 return@forEach
             }
             submissionService.refreshSubmission(submission)
-            submissionService.prepareForTesting(submission)
-            submissionService.testSubmission(submission)
 
             submissionStatuses[id] = submission.status.code
 
@@ -342,7 +333,7 @@ class SubmissionController {
             val row = arrayOf(
                 submission.id,
                 submission.studentId,
-                submission.taskName,
+                submission.taskNamePrefix,
                 submission.date,
                 submission.status
             )

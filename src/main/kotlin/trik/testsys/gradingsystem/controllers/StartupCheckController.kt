@@ -1,13 +1,13 @@
 package trik.testsys.gradingsystem.controllers
 
-import trik.testsys.security.basicauth.services.TrikUserService
-import trik.testsys.gradingsystem.services.SubmissionService
-
+import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.ApplicationListener
 import org.springframework.stereotype.Component
+import trik.testsys.gradingsystem.services.SubmissionService
+import trik.testsys.security.basicauth.services.TrikUserService
 
 
 @Component
@@ -22,8 +22,10 @@ class StartupCheckController : ApplicationListener<ApplicationReadyEvent> {
     private lateinit var submissionService: SubmissionService
 
     override fun onApplicationEvent(event: ApplicationReadyEvent) {
-        checkUsers()
-        checkUnprocessedSubmissions()
+        runBlocking {
+            checkUsers()
+            checkUnprocessedSubmissions()
+        }
     }
 
     private fun checkUsers() {
@@ -37,7 +39,7 @@ class StartupCheckController : ApplicationListener<ApplicationReadyEvent> {
         }
     }
 
-    private fun checkUnprocessedSubmissions() {
+    private suspend fun checkUnprocessedSubmissions() {
         logger.info("Checking if there are any unprocessed submissions...")
         submissionService.getAllUnprocessedSubmissionsOrNull().let { submissions ->
             if (submissions == null) {
@@ -46,7 +48,6 @@ class StartupCheckController : ApplicationListener<ApplicationReadyEvent> {
                 logger.warn("There are ${submissions.size} unprocessed submissions. Started processing them...")
 
                 submissions.forEach {
-                    submissionService.prepareForTesting(it)
                     submissionService.testSubmission(it)
                 }
 
